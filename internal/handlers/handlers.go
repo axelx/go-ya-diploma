@@ -173,7 +173,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 
 		o, err := orders.FindOrder(h.db, h.Logger, order)
 		if err != nil {
-			h.Logger.Error("handler Withdraw", zap.String("orders.FindOrder(", err.Error()))
+			h.Logger.Error("handler Withdraw", zap.String("orders.FindOrder", err.Error()))
 		}
 
 		if o.UserID > 0 && o.UserID == userID {
@@ -189,6 +189,9 @@ func (h *handler) Withdraw() http.HandlerFunc {
 		if err != nil {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
 			err = orders.AddOrder(h.db, h.Logger, userID, order, sumWithdraw, h.chAdd)
+			if err != nil {
+				h.Logger.Error("handler Withdraw", zap.String("orders.AddOrder", err.Error()))
+			}
 		}
 
 		h.Logger.Info("sending HTTP response UpdatedMetric",

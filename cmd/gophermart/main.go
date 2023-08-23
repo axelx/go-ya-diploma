@@ -7,7 +7,7 @@ import (
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 
-	"io/ioutil"
+	"io"
 	"sync"
 	"time"
 
@@ -85,7 +85,7 @@ func checkAccural(urlAccrualServer, order string, chProcOrder chan string, count
 		//*countPerMin += 5
 	} else {
 		fmt.Println("checkAccural")
-		body, _ := ioutil.ReadAll(resp2.Body)
+		body, _ := io.ReadAll(resp2.Body)
 		resp2.Body.Close()
 
 		var dat map[string]string
