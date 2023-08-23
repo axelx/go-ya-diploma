@@ -36,6 +36,7 @@ func (h *handler) UserRegister() http.HandlerFunc {
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return
 		}
+		res.Header().Set("Content-Type", "application/json")
 
 		if cookie, b := user.AuthUser(h.db, h.Logger, u.Login, u.Password); b {
 			http.SetCookie(res, &cookie)
@@ -44,9 +45,8 @@ func (h *handler) UserRegister() http.HandlerFunc {
 			res.WriteHeader(http.StatusUnauthorized)
 		}
 
-		res.Header().Set("Content-Type", "application/json")
 		res.WriteHeader(http.StatusOK)
-		size, err := res.Write([]byte("HELLO"))
+		size, err := res.Write([]byte("{\"login\":\"" + u.Login + "\", \"password\":\"" + u.Password + "\"}"))
 		if err != nil {
 			h.Logger.Error("Error UserRegister",
 				zap.String("about func", "UserRegister"),
