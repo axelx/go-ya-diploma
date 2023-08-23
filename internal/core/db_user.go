@@ -13,7 +13,7 @@ func FindUserByLogin(db *sqlx.DB, lg *zap.Logger, login string) (models.User, er
 	var value string
 	err := row.Scan(&value)
 	if err != nil {
-		lg.Error("Error FindUserByLogin :", zap.String("about ERR", err.Error()))
+		//lg.Error("Error FindUserByLogin :", zap.String("about ERR", err.Error()))
 		return models.User{}, err
 	}
 	lg.Info("db FindUserByLogin :", zap.String("user_id", value))
