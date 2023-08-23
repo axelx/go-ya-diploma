@@ -124,6 +124,9 @@ func (h *handler) Balance() http.HandlerFunc {
 			h.Logger.Error("handler Balance", zap.String("user.Balance", err.Error()))
 		}
 		balanceJSON, err := json.Marshal(ubs)
+		if err != nil {
+			h.Logger.Error("handler Balance", zap.String("json.Marshal(ubs)", err.Error()))
+		}
 		size, err := res.Write(balanceJSON)
 
 		if err != nil {
@@ -169,6 +172,9 @@ func (h *handler) Withdraw() http.HandlerFunc {
 		}
 
 		o, err := orders.FindOrder(h.db, h.Logger, order)
+		if err != nil {
+			h.Logger.Error("handler Withdraw", zap.String("orders.FindOrder(", err.Error()))
+		}
 
 		if o.UserID > 0 && o.UserID == userID {
 			h.Logger.Info("AddOrders : заказ существует уже у этого пользователя", zap.String("order", order))
@@ -206,6 +212,9 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 		}
 
 		ordersJSON, err := json.Marshal(os)
+		if err != nil {
+			h.Logger.Error("handler Withdrawals", zap.String("json.Marshal(os)", err.Error()))
+		}
 		size, err := res.Write(ordersJSON)
 
 		if err != nil {
