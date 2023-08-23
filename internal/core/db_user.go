@@ -44,9 +44,9 @@ func AuthUser(db *sqlx.DB, lg *zap.Logger, login, password string) models.User {
 	return user
 }
 
-func Balance(db *sqlx.DB, lg *zap.Logger, user_id int) ([]models.Order, error) {
+func Balance(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error) {
 	rows, err := db.QueryContext(context.Background(),
-		` SELECT number,accrual,status,uploaded_at FROM orders WHERE user_id = $1`, user_id)
+		` SELECT number,accrual,status,uploaded_at FROM orders WHERE user_id = $1`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +55,7 @@ func Balance(db *sqlx.DB, lg *zap.Logger, user_id int) ([]models.Order, error) {
 
 	for rows.Next() {
 		var o models.Order
-		err = rows.Scan(&o.Number, &o.Accrual, &o.Status, &o.Uploaded_at)
+		err = rows.Scan(&o.Number, &o.Accrual, &o.Status, &o.UploadedAt)
 		if err != nil {
 			return nil, err
 		}

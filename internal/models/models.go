@@ -22,13 +22,13 @@ type User struct {
 }
 
 type Order struct {
-	ID          int        `json:"id,omitempty"`
-	Number      string     `json:"number,omitempty"`
-	Accrual     int        `json:"accrual"`
-	Withdrawn   int        `json:"withdrawn"`
-	Status      string     `json:"status,omitempty"`
-	Uploaded_at *time.Time `json:"uploaded_at,omitempty"`
-	UserID      int        `json:"user_id,omitempty"`
+	ID         int        `json:"id,omitempty"`
+	Number     string     `json:"number,omitempty"`
+	Accrual    int        `json:"accrual"`
+	Withdrawn  int        `json:"withdrawn"`
+	Status     string     `json:"status,omitempty"`
+	UploadedAt *time.Time `json:"uploaded_at,omitempty"`
+	UserID     int        `json:"user_id,omitempty"`
 }
 
 type Balance struct {

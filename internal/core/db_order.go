@@ -33,7 +33,7 @@ func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error)
 
 	for rows.Next() {
 		var o models.Order
-		err = rows.Scan(&o.Number, &o.Accrual, &o.Withdrawn, &o.Status, &o.Uploaded_at)
+		err = rows.Scan(&o.Number, &o.Accrual, &o.Withdrawn, &o.Status, &o.UploadedAt)
 		if err != nil {
 			return nil, err
 		}

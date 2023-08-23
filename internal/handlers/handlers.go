@@ -87,6 +87,9 @@ func (h *handler) Orders() http.HandlerFunc {
 
 		userID := user.GetIDviaCookie(req)
 		os, err := orders.FindOrders(h.db, h.Logger, userID)
+		if err != nil {
+			h.Logger.Error("handler Orders", zap.String("orders.FindOrders", err.Error()))
+		}
 
 		if len(os) == 0 {
 			res.WriteHeader(http.StatusNoContent)
@@ -94,6 +97,9 @@ func (h *handler) Orders() http.HandlerFunc {
 		}
 
 		ordersJSON, err := json.Marshal(os)
+		if err != nil {
+			h.Logger.Error("handler Orders", zap.String("json.Marshal(os)", err.Error()))
+		}
 		size, err := res.Write(ordersJSON)
 
 		if err != nil {
@@ -114,6 +120,9 @@ func (h *handler) Balance() http.HandlerFunc {
 
 		userID := user.GetIDviaCookie(req)
 		ubs, err := user.Balance(h.db, h.Logger, userID)
+		if err != nil {
+			h.Logger.Error("handler Balance", zap.String("user.Balance", err.Error()))
+		}
 		balanceJSON, err := json.Marshal(ubs)
 		size, err := res.Write(balanceJSON)
 
@@ -138,9 +147,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 			http.Error(res, "StatusInternalServerError", http.StatusInternalServerError)
 			return
 		}
-		var order string
-		order = dat["order"].(string)
-
+		order := dat["order"].(string)
 		wdrw := dat["sum"]
 		sumWithdraw := wdrw.(float64)
 
@@ -151,6 +158,9 @@ func (h *handler) Withdraw() http.HandlerFunc {
 		userID := user.GetIDviaCookie(req)
 
 		ubs, err := user.Balance(h.db, h.Logger, userID)
+		if err != nil {
+			h.Logger.Error("handler Withdraw", zap.String("user.Balance", err.Error()))
+		}
 		avBalance := ubs.Current - ubs.Withdrawn
 
 		if avBalance < sumWithdraw {
@@ -186,6 +196,9 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 
 		userID := user.GetIDviaCookie(req)
 		os, err := orders.FindOrders(h.db, h.Logger, userID)
+		if err != nil {
+			h.Logger.Error("handler Withdrawals", zap.String("orders.FindOrders", err.Error()))
+		}
 
 		if len(os) == 0 {
 			res.WriteHeader(http.StatusNoContent)

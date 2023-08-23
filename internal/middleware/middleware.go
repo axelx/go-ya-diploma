@@ -22,10 +22,6 @@ func CheckAuth(h http.HandlerFunc, lg *zap.Logger) http.HandlerFunc {
 			return
 		}
 
-		if err != nil {
-			lg.Error("order FindOrders", zap.String("err", err.Error()))
-		}
-
 		h(w, r)
 	})
 }

@@ -60,7 +60,7 @@ func Balance(db *sqlx.DB, lg *zap.Logger, userID int) (models.Balance, error) {
 
 func GetIDviaCookie(req *http.Request) int {
 	cookies, _ := req.Cookie("auth")
-	user_id := utils.StrToInt(cookies.Value)
+	userID := utils.StrToInt(cookies.Value)
 
-	return user_id
+	return userID
 }

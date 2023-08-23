@@ -28,10 +28,7 @@ func LunaCheck(order string, lg *zap.Logger) bool {
 		sum += digit
 	}
 
-	if sum%10 != 0 {
-		return false
-	}
-	return true
+	return sum%10 == 0
 }
 
 func FindOrder(db *sqlx.DB, lg *zap.Logger, orderID string) (models.Order, error) {
