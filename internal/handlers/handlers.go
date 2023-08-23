@@ -17,13 +17,14 @@ import (
 type handler struct {
 	Logger *zap.Logger
 	db     *sqlx.DB
+	chAdd  chan string
 }
 
-// func New(k keeper, log *zap.Logger, db *sqlx.DB, NewDBStorage *pg.PgStorage, hashKey string) handler {
-func New(log *zap.Logger, db *sqlx.DB) handler {
+func New(log *zap.Logger, db *sqlx.DB, chAdd chan string) handler {
 	return handler{
 		Logger: log,
 		db:     db,
+		chAdd:  chAdd,
 	}
 }
 
@@ -67,7 +68,8 @@ func (h *handler) AddOrders() http.HandlerFunc {
 		}
 
 		if err != nil {
-			err = orders.AddOrder(h.db, h.Logger, userID, order, 0)
+			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
+			err = orders.AddOrder(h.db, h.Logger, userID, order, 0, h.chAdd)
 			if err != nil {
 				h.Logger.Error("Error AddOrders :", zap.String("about ERR", err.Error()))
 				http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
@@ -159,15 +161,18 @@ func (h *handler) Withdraw() http.HandlerFunc {
 		o, err := orders.FindOrder(h.db, h.Logger, order)
 
 		if o.UserID > 0 && o.UserID == userID {
+			h.Logger.Info("AddOrders : заказ существует уже у этого пользователя", zap.String("order", order))
 			res.WriteHeader(http.StatusOK)
 			return
 		} else if o.UserID > 0 && o.UserID != userID {
+			h.Logger.Info("AddOrders : заказ существует уже НО у другого пользователя", zap.String("order", order))
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return
 		}
 
 		if err != nil {
-			err = orders.AddOrder(h.db, h.Logger, userID, order, sumWithdraw)
+			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
+			err = orders.AddOrder(h.db, h.Logger, userID, order, sumWithdraw, h.chAdd)
 		}
 
 		h.Logger.Info("sending HTTP response UpdatedMetric",

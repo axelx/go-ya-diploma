@@ -7,9 +7,9 @@ import (
 	"go.uber.org/zap"
 )
 
-func FindOrder(db *sqlx.DB, lg *zap.Logger, order_id string) (models.Order, error) {
+func FindOrder(db *sqlx.DB, lg *zap.Logger, orderID string) (models.Order, error) {
 	row := db.QueryRowContext(context.Background(),
-		`SELECT user_id, number FROM orders WHERE number = $1`, order_id)
+		`SELECT user_id, number FROM orders WHERE number = $1`, orderID)
 
 	var o models.Order
 	err := row.Scan(&o.UserID, &o.Number)
@@ -20,10 +20,10 @@ func FindOrder(db *sqlx.DB, lg *zap.Logger, order_id string) (models.Order, erro
 	return o, nil
 }
 
-func FindOrders(db *sqlx.DB, lg *zap.Logger, user_id int) ([]models.Order, error) {
+func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error) {
 
 	rows, err := db.QueryContext(context.Background(),
-		` SELECT number,accrual,withdrawn,status,uploaded_at FROM orders WHERE user_id = $1`, user_id)
+		` SELECT number,accrual,withdrawn,status,uploaded_at FROM orders WHERE user_id = $1`, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -47,13 +47,13 @@ func FindOrders(db *sqlx.DB, lg *zap.Logger, user_id int) ([]models.Order, error
 	return orders, nil
 }
 
-func AddOrder(db *sqlx.DB, lg *zap.Logger, user_id int, order string, withdrawn float64) error {
+func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, order string, withdrawn float64) error {
 
 	if withdrawn > 0 {
 		w := int(withdrawn * 100)
 		_, err := db.ExecContext(context.Background(),
 			`INSERT INTO orders (number, status, user_id, withdrawn, uploaded_at) VALUES ($1, $2, $3, $4, NOW())`,
-			order, "NEW", user_id, w)
+			order, "NEW", userID, w)
 		if err != nil {
 			lg.Error("Error AddOrder:", zap.String("about ERR", err.Error()))
 			return err
@@ -61,7 +61,7 @@ func AddOrder(db *sqlx.DB, lg *zap.Logger, user_id int, order string, withdrawn 
 
 	} else {
 		_, err := db.ExecContext(context.Background(),
-			`INSERT INTO orders (number, status, user_id, uploaded_at) VALUES ($1, $2, $3, NOW())`, order, "NEW", user_id)
+			`INSERT INTO orders (number, status, user_id, uploaded_at) VALUES ($1, $2, $3, NOW())`, order, "NEW", userID)
 		if err != nil {
 			lg.Error("Error AddOrder:", zap.String("about ERR", err.Error()))
 			return err
@@ -69,4 +69,14 @@ func AddOrder(db *sqlx.DB, lg *zap.Logger, user_id int, order string, withdrawn 
 	}
 
 	return nil
+}
+
+func UpdateStatusOrder(db *sqlx.DB, lg *zap.Logger, orderID, status string) error {
+	_, err := db.ExecContext(context.Background(),
+		`UPDATE orders SET status = $1 WHERE number = $2`, status, orderID)
+	if err != nil {
+		lg.Error("Error AddOrder:", zap.String("about ERR", err.Error()))
+		return err
+	}
+	return err
 }

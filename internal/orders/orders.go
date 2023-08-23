@@ -34,16 +34,17 @@ func LunaCheck(order string, lg *zap.Logger) bool {
 	return true
 }
 
-func FindOrder(db *sqlx.DB, lg *zap.Logger, order_id string) (models.Order, error) {
-	o, err := core.FindOrder(db, lg, order_id)
+func FindOrder(db *sqlx.DB, lg *zap.Logger, orderID string) (models.Order, error) {
+	o, err := core.FindOrder(db, lg, orderID)
 	if err != nil {
 		lg.Error("order FindOrder", zap.String("err", err.Error()))
+		return o, err
 	}
 	return o, err
 }
 
-func FindOrders(db *sqlx.DB, lg *zap.Logger, user_id int) ([]models.Order, error) {
-	os, err := core.FindOrders(db, lg, user_id)
+func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error) {
+	os, err := core.FindOrders(db, lg, userID)
 	if err != nil {
 		lg.Error("order FindOrders", zap.String("err", err.Error()))
 	}
@@ -51,7 +52,20 @@ func FindOrders(db *sqlx.DB, lg *zap.Logger, user_id int) ([]models.Order, error
 	return os, nil
 }
 
-func AddOrder(db *sqlx.DB, lg *zap.Logger, user_id int, order_id string, withdrawn float64) error {
-	err := core.AddOrder(db, lg, user_id, order_id, withdrawn)
+func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, orderID string, withdrawn float64, chAdd chan string) error {
+	err := core.AddOrder(db, lg, userID, orderID, withdrawn)
+	if err == nil {
+		lg.Info("order AddOrder and add to channel", zap.String("about", ""))
+		chAdd <- orderID
+	}
+	return err
+}
+
+func UpdateStatus(db *sqlx.DB, lg *zap.Logger, orderID, status string) error {
+	err := core.UpdateStatusOrder(db, lg, orderID, status)
+	if err != nil {
+		lg.Info("order AddOrder and add to channel", zap.String("about", ""))
+		return err
+	}
 	return err
 }
