@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/axelx/go-ya-diploma/internal/user"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 
@@ -11,7 +12,6 @@ import (
 	"sync"
 	"time"
 
-	//"fmt"
 	"github.com/axelx/go-ya-diploma/internal/config"
 	"github.com/axelx/go-ya-diploma/internal/core"
 	"github.com/axelx/go-ya-diploma/internal/handlers"
@@ -22,6 +22,8 @@ import (
 )
 
 func main() {
+	or := orders.Order{}
+	us := user.User{}
 	var wg sync.WaitGroup
 
 	conf := config.NewConfigServer()
@@ -66,7 +68,7 @@ func main() {
 		}
 	}(&countPerMin, db, lg)
 
-	hd := handlers.New(lg, db, chAddOrder)
+	hd := handlers.New(or, us, us, lg, db, chAddOrder)
 	if err := http.ListenAndServe(conf.FlagRunAddr, hd.Router()); err != nil {
 		panic(err)
 	}
@@ -80,7 +82,7 @@ func checkAccural(urlAccrualServer, order string, chProcOrder chan string, count
 	client := &http.Client{}
 	resp2, err := client.Get(urlAccrualServer + "api/orders/" + order)
 	if err != nil {
-		fmt.Println("Error reporting metrics:", err)
+		fmt.Println("Error reporting:", err)
 		// скорее всего тут ошибку должен получить
 		//*countPerMin += 5
 	} else {

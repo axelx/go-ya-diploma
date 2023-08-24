@@ -15,7 +15,7 @@ type Metrics struct {
 }
 
 type User struct {
-	ID       string `json:"id"`
+	ID       int    `json:"id"`
 	Login    string `json:"login,omitempty"`
 	Password string `json:"password,omitempty"`
 	Order    []Order

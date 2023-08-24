@@ -26,13 +26,16 @@ func (h *handler) UserRegister() http.HandlerFunc {
 			return
 		}
 
-		usr, err := user.FindUserByLogin(h.db, h.Logger, u.Login)
-		if err != nil {
+		usrID, usrL := h.find(h.usrS, u.Login)
+
+		if usrID == 0 {
 			h.Logger.Info("CreateNewUser :", zap.String("user_id", u.Login))
-			user.CreateNewUser(h.db, h.Logger, u.Login, u.Password)
-		}
-		if usr.Login != "" {
-			h.Logger.Info("StatusConflict :", zap.String("user_id", usr.Login))
+			err := h.create(h.usrC, u.Login, u.Password)
+			if err != nil {
+				h.Logger.Error("CreateNewUser :", zap.String("err", err.Error()))
+			}
+		} else {
+			h.Logger.Info("StatusConflict :", zap.String("user_id", usrL))
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return
 		}

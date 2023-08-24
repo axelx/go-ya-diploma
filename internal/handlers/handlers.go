@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/axelx/go-ya-diploma/internal/logger"
 	"github.com/axelx/go-ya-diploma/internal/middleware"
 	"github.com/axelx/go-ya-diploma/internal/orders"
@@ -14,14 +15,30 @@ import (
 	"strconv"
 )
 
+type searcher interface {
+	SearchOne(*sqlx.DB, *zap.Logger, string) (int, string)
+	SearchMany(string) ([]int, []string)
+}
+type creater interface {
+	Create(*sqlx.DB, *zap.Logger, string, string) error
+}
+
 type handler struct {
+	ordS   searcher
+	usrS   searcher
+	ordC   creater
+	usrC   creater
 	Logger *zap.Logger
 	db     *sqlx.DB
 	chAdd  chan string
 }
 
-func New(log *zap.Logger, db *sqlx.DB, chAdd chan string) handler {
+func New(ord, usr searcher, ust creater, log *zap.Logger, db *sqlx.DB, chAdd chan string) handler {
 	return handler{
+		ordS: ord,
+		usrS: usr,
+		//ordC:   ort,
+		usrC:   ust,
 		Logger: log,
 		db:     db,
 		chAdd:  chAdd,
@@ -29,7 +46,6 @@ func New(log *zap.Logger, db *sqlx.DB, chAdd chan string) handler {
 }
 
 func (h *handler) Router() chi.Router {
-
 	r := chi.NewRouter()
 	r.Use(logger.RequestLogger(h.Logger))
 
@@ -53,23 +69,26 @@ func (h *handler) AddOrders() http.HandlerFunc {
 			http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
 			return
 		}
-		userID := user.GetIDviaCookie(req)
+		userIDcookie := user.GetIDviaCookie(req)
 
-		o, err := orders.FindOrder(h.db, h.Logger, order)
+		//o, err := orders.FindOrder(h.db, h.Logger, order)
+		usrID, ordN := h.find(h.ordS, order)
+		fmt.Println("----", usrID, ordN)
 
-		if o.UserID > 0 && o.UserID == userID {
+		if usrID > 0 && usrID == userIDcookie {
 			h.Logger.Info("AddOrders : заказ существует уже у этого пользователя", zap.String("order", order))
 			res.WriteHeader(http.StatusOK)
 			return
-		} else if o.UserID > 0 && o.UserID != userID {
+		} else if usrID > 0 && usrID != userIDcookie {
+			fmt.Println("----")
 			h.Logger.Info("AddOrders : заказ существует уже НО у другого пользователя", zap.String("order", order))
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return
 		}
 
-		if err != nil {
+		if ordN == "" {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
-			err = orders.AddOrder(h.db, h.Logger, userID, order, 0, h.chAdd)
+			err := orders.AddOrder(h.db, h.Logger, userIDcookie, order, 0, h.chAdd)
 			if err != nil {
 				h.Logger.Error("Error AddOrders :", zap.String("about ERR", err.Error()))
 				http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
@@ -231,4 +250,20 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
 	}
+}
+
+func (h *handler) find(se searcher, findStr string) (int, string) {
+	i, s := se.SearchOne(h.db, h.Logger, findStr)
+	fmt.Println("func (h *handler) find(se searcher, findStr string) (int, string)", i, s)
+	return i, s
+}
+
+func (h *handler) findMany(se searcher) {
+	i, s := se.SearchMany("_findMany")
+	fmt.Println(i, s)
+}
+
+func (h *handler) create(c creater, firstStr, secondStr string) error {
+	err := c.Create(h.db, h.Logger, firstStr, secondStr)
+	return err
 }

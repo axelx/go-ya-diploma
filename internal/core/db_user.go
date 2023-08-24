@@ -7,17 +7,17 @@ import (
 	"go.uber.org/zap"
 )
 
-func FindUserByLogin(db *sqlx.DB, lg *zap.Logger, login string) (models.User, error) {
+func FindUserByLogin(db *sqlx.DB, lg *zap.Logger, login string) (int, string) {
 
-	row := db.QueryRowContext(context.Background(), ` SELECT login FROM users WHERE login = $1`, login)
-	var value string
-	err := row.Scan(&value)
+	row := db.QueryRowContext(context.Background(), ` SELECT id, login FROM users WHERE login = $1`, login)
+	var v models.User
+	err := row.Scan(&v.ID, &v.Login)
 	if err != nil {
-		//lg.Error("Error FindUserByLogin :", zap.String("about ERR", err.Error()))
-		return models.User{}, err
+		lg.Error("Error FindUserByLogin :", zap.String("about ERR", err.Error()))
+		return 0, ""
 	}
-	lg.Info("db FindUserByLogin :", zap.String("user_id", value))
-	return models.User{Login: value}, nil
+	lg.Info("db FindUserByLogin :", zap.String("user_id", v.Login))
+	return v.ID, v.Login
 }
 
 func CreateNewUser(db *sqlx.DB, lg *zap.Logger, login, password string) error {
