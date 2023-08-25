@@ -23,7 +23,7 @@ func NewConfigServer() *ConfigServer {
 		FlagRunAddr:              "",
 		FlagDatabaseDSN:          "",
 		FlagAccrualSystemAddress: "",
-		FlagLogLevel:             "",
+		FlagLogLevel:             "info",
 	}
 	parseFlagsServer(&conf)
 
@@ -34,7 +34,7 @@ func parseFlagsServer(c *ConfigServer) {
 	flag.StringVar(&c.FlagRunAddr, "a", "localhost:8080", "address and port to run server")
 	flag.StringVar(&c.FlagDatabaseDSN, "d", "", "DATABASE_DSN string")
 	flag.StringVar(&c.FlagAccrualSystemAddress, "r", "http://localhost:8081/", "ACCRUAL_SYSTEM_ADDRESS string")
-	flag.StringVar(&c.FlagLogLevel, "l", "info", "log level")
+	//flag.StringVar(&c.FlagLogLevel, "l", "info", "log level")
 
 	flag.Parse()
 
@@ -47,8 +47,8 @@ func parseFlagsServer(c *ConfigServer) {
 	if envAccrualSystemAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS"); envAccrualSystemAddress != "" {
 		c.FlagLogLevel = envAccrualSystemAddress
 	}
-	if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
-		c.FlagLogLevel = envLogLevel
-	}
+	//if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
+	//	c.FlagLogLevel = envLogLevel
+	//}
 
 }
