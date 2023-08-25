@@ -32,6 +32,7 @@ func (h *handler) UserRegister() http.HandlerFunc {
 			http.Error(res, "StatusBadRequest", http.StatusBadRequest)
 			return
 		}
+		fmt.Println("----2.1", u)
 
 		usrID, usrL := h.find(h.usrS, u.Login)
 		fmt.Println("----3", usrID, usrL)

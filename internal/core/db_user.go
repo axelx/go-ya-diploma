@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"fmt"
 	"github.com/axelx/go-ya-diploma/internal/models"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -9,9 +10,11 @@ import (
 
 func FindUserByLogin(db *sqlx.DB, lg *zap.Logger, login string) (int, string) {
 
-	row := db.QueryRowContext(context.Background(), ` SELECT id, login FROM users WHERE login = $1`, login)
+	row := db.QueryRowContext(context.Background(), `SELECT id, login FROM users WHERE login = $1`, login)
+	fmt.Println("----2.3", row)
 	var v models.User
 	err := row.Scan(&v.ID, &v.Login)
+	fmt.Println("----2.4", v)
 	if err != nil {
 		lg.Error("Error FindUserByLogin :", zap.String("about ERR", err.Error()))
 		return 0, ""
