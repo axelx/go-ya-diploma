@@ -5,6 +5,7 @@ import (
 	"github.com/axelx/go-ya-diploma/internal/models"
 	"github.com/axelx/go-ya-diploma/internal/user"
 	"go.uber.org/zap"
+	"io"
 	"net/http"
 	"strconv"
 )
@@ -14,8 +15,11 @@ func (h *handler) UserRegister() http.HandlerFunc {
 
 		h.Logger.Debug("decoding request")
 		var u models.User
-		dec := json.NewDecoder(req.Body)
-		if err := dec.Decode(&u); err != nil {
+
+		body, _ := io.ReadAll(req.Body)
+		err := json.Unmarshal([]byte(body), &u)
+
+		if err != nil {
 			h.Logger.Debug("cannot decode request JSON body", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)
 			return
@@ -68,8 +72,11 @@ func (h *handler) UserAuth() http.HandlerFunc {
 
 		h.Logger.Debug("decoding request")
 		var u models.User
-		dec := json.NewDecoder(req.Body)
-		if err := dec.Decode(&u); err != nil {
+
+		body, _ := io.ReadAll(req.Body)
+		err := json.Unmarshal([]byte(body), &u)
+
+		if err != nil {
 			h.Logger.Debug("cannot decode request JSON body", zap.Error(err))
 			res.WriteHeader(http.StatusInternalServerError)
 			return
