@@ -13,7 +13,9 @@ func InitDB(url string, lg *zap.Logger) (*sqlx.DB, error) {
 
 	db, err := sqlx.Connect("pgx", url)
 	if err != nil {
-		lg.Error("Error not connect to db", zap.String("about ERR", err.Error()))
+		lg.Error("Error not connect to db",
+			zap.String("URL", url),
+			zap.String("about ERR", err.Error()))
 		return db, err
 	}
 	db.SetMaxOpenConns(10)
