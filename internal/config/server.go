@@ -32,7 +32,7 @@ func NewConfigServer() *ConfigServer {
 
 func parseFlagsServer(c *ConfigServer) {
 	flag.StringVar(&c.FlagRunAddr, "a", "localhost:8080", "address and port to run server")
-	flag.StringVar(&c.FlagDatabaseDSN, "d", "", "DATABASE_DSN string")
+	flag.StringVar(&c.FlagDatabaseDSN, "d", "postgres://user:password@localhost:5464/go-ya-gophermart\"", "DATABASE_DSN string")
 	flag.StringVar(&c.FlagAccrualSystemAddress, "r", "http://localhost:8081/", "ACCRUAL_SYSTEM_ADDRESS string")
 	//flag.StringVar(&c.FlagLogLevel, "l", "info", "log level")
 
