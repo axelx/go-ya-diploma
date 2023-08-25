@@ -38,10 +38,10 @@ func parseFlagsServer(c *ConfigServer) {
 
 	flag.Parse()
 
-	if envRunAddr := os.Getenv("ADDRESS"); envRunAddr != "" {
+	if envRunAddr := os.Getenv("RUN_ADDRESS"); envRunAddr != "" {
 		c.FlagRunAddr = envRunAddr
 	}
-	if envDatabaseDSN := os.Getenv("DATABASE_DSN"); envDatabaseDSN != "" {
+	if envDatabaseDSN := os.Getenv("DATABASE_URI"); envDatabaseDSN != "" {
 		c.FlagDatabaseDSN = envDatabaseDSN
 	}
 	if envAccrualSystemAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS"); envAccrualSystemAddress != "" {
