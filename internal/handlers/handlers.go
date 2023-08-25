@@ -253,6 +253,8 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 }
 
 func (h *handler) find(se searcher, findStr string) (int, string) {
+	fmt.Println("----2.2 find - SearchOne", findStr)
+
 	i, s := se.SearchOne(h.db, h.Logger, findStr)
 	fmt.Println("func (h *handler) find(se searcher, findStr string) (int, string)", i, s)
 	return i, s

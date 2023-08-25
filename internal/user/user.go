@@ -19,6 +19,7 @@ type User struct {
 }
 
 func (u User) SearchOne(db *sqlx.DB, lg *zap.Logger, login string) (int, string) {
+	fmt.Println("----2.4   core.FindUserByLogin", login)
 
 	usrID, log := core.FindUserByLogin(db, lg, login)
 	fmt.Println(usrID, log, "SearchOne - user")
