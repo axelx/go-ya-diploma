@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/axelx/go-ya-diploma/internal/models"
 	"github.com/axelx/go-ya-diploma/internal/user"
 	"go.uber.org/zap"
@@ -17,7 +18,9 @@ func (h *handler) UserRegister() http.HandlerFunc {
 		var u models.User
 
 		body, _ := io.ReadAll(req.Body)
+		fmt.Println("----1", body)
 		err := json.Unmarshal([]byte(body), &u)
+		fmt.Println("----2", u)
 
 		if err != nil {
 			h.Logger.Debug("cannot decode request JSON body", zap.Error(err))
@@ -31,14 +34,19 @@ func (h *handler) UserRegister() http.HandlerFunc {
 		}
 
 		usrID, usrL := h.find(h.usrS, u.Login)
+		fmt.Println("----3", usrID, usrL)
 
 		if usrID == 0 {
+			fmt.Println("----4", usrID, usrL, usrID == 0)
+
 			h.Logger.Info("CreateNewUser :", zap.String("user_id", u.Login))
 			err := h.create(h.usrC, u.Login, u.Password)
 			if err != nil {
 				h.Logger.Error("CreateNewUser :", zap.String("err", err.Error()))
 			}
 		} else {
+			fmt.Println("----5", usrID, usrL, usrID == 0)
+
 			h.Logger.Info("StatusConflict :", zap.String("user_id", usrL))
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return
@@ -46,6 +54,8 @@ func (h *handler) UserRegister() http.HandlerFunc {
 		res.Header().Set("Content-Type", "application/json")
 
 		if cookie, b := user.AuthUser(h.db, h.Logger, u.Login, u.Password); b {
+			fmt.Println("----6", cookie, b)
+
 			http.SetCookie(res, &cookie)
 			res.WriteHeader(http.StatusOK)
 		} else {
@@ -65,6 +75,8 @@ func (h *handler) UserRegister() http.HandlerFunc {
 			zap.String("size", strconv.Itoa(size)),
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
+		fmt.Println("----7 end")
+
 	}
 }
 func (h *handler) UserAuth() http.HandlerFunc {
