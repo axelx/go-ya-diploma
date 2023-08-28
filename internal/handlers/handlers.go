@@ -74,6 +74,7 @@ func (h *handler) AddOrders() http.HandlerFunc {
 
 		//o, err := orders.FindOrder(h.db, h.Logger, order)
 		usrID, ordN := h.find(h.ordS, order)
+		fmt.Println("----", usrID, "-", ordN)
 
 		if usrID > 0 && usrID == userIDcookie {
 			fmt.Println("----", usrID, ordN)
@@ -255,7 +256,7 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 }
 
 func (h *handler) find(se searcher, findStr string) (int, string) {
-	fmt.Println("---- find - SearchOne", findStr)
+	fmt.Println("---- find - SearchOne", se, findStr)
 
 	i, s := se.SearchOne(h.db, h.Logger, findStr)
 	fmt.Println("func (h *handler) find(se searcher, findStr string) (int, string)", i, s)
