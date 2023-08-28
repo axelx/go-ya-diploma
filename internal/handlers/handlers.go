@@ -74,14 +74,14 @@ func (h *handler) AddOrders() http.HandlerFunc {
 
 		//o, err := orders.FindOrder(h.db, h.Logger, order)
 		usrID, ordN := h.find(h.ordS, order)
-		fmt.Println("----", usrID, ordN)
 
 		if usrID > 0 && usrID == userIDcookie {
+			fmt.Println("----", usrID, ordN)
 			h.Logger.Info("AddOrders : заказ существует уже у этого пользователя", zap.String("order", order))
 			res.WriteHeader(http.StatusOK)
 			return
 		} else if usrID > 0 && usrID != userIDcookie {
-			fmt.Println("----")
+			fmt.Println("----", usrID, ordN)
 			h.Logger.Info("AddOrders : заказ существует уже НО у другого пользователя", zap.String("order", order))
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return
@@ -255,7 +255,7 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 }
 
 func (h *handler) find(se searcher, findStr string) (int, string) {
-	fmt.Println("----2.2 find - SearchOne", findStr)
+	fmt.Println("---- find - SearchOne", findStr)
 
 	i, s := se.SearchOne(h.db, h.Logger, findStr)
 	fmt.Println("func (h *handler) find(se searcher, findStr string) (int, string)", i, s)
