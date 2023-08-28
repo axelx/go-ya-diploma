@@ -99,7 +99,7 @@ func (h *handler) AddOrders() http.HandlerFunc {
 			res.WriteHeader(http.StatusAccepted)
 		}
 
-		h.Logger.Info("sending HTTP response UpdatedMetric",
+		h.Logger.Info("sending HTTP response",
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
 	}
@@ -130,7 +130,7 @@ func (h *handler) Orders() http.HandlerFunc {
 			return
 		}
 
-		h.Logger.Info("sending HTTP response UpdatedMetric",
+		h.Logger.Info("sending HTTP response",
 			zap.String("size", strconv.Itoa(size)),
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
@@ -156,7 +156,7 @@ func (h *handler) Balance() http.HandlerFunc {
 			return
 		}
 
-		h.Logger.Info("sending HTTP response UpdatedMetric",
+		h.Logger.Info("sending HTTP response",
 			zap.String("size", strconv.Itoa(size)),
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
@@ -216,7 +216,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 			}
 		}
 
-		h.Logger.Info("sending HTTP response UpdatedMetric",
+		h.Logger.Info("sending HTTP response",
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
 	}
@@ -248,7 +248,7 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 			return
 		}
 
-		h.Logger.Info("sending HTTP response UpdatedMetric",
+		h.Logger.Info("sending HTTP response",
 			zap.String("size", strconv.Itoa(size)),
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)

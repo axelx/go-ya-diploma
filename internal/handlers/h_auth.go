@@ -61,7 +61,7 @@ func (h *handler) UserRegister() http.HandlerFunc {
 			)
 		}
 
-		h.Logger.Info("sending HTTP response UpdatedMetric",
+		h.Logger.Info("sending HTTP response",
 			zap.String("size", strconv.Itoa(size)),
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
@@ -94,7 +94,7 @@ func (h *handler) UserAuth() http.HandlerFunc {
 			res.WriteHeader(http.StatusUnauthorized)
 		}
 
-		h.Logger.Info("sending HTTP response UpdatedMetric",
+		h.Logger.Info("sending HTTP response",
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
 	}

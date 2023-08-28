@@ -23,7 +23,7 @@ func (o Order) SearchOne(db *sqlx.DB, lg *zap.Logger, orderNum string) (int, str
 
 	ord, err := core.FindOrder(db, lg, orderNum)
 	if err != nil {
-		lg.Error("order SearchOne", zap.String("err", err.Error()))
+		lg.Info("order SearchOne", zap.String("err", err.Error()))
 		return 0, ""
 	}
 	return ord.UserID, ord.Number
