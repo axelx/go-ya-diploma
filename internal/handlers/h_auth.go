@@ -18,9 +18,7 @@ func (h *handler) UserRegister() http.HandlerFunc {
 		var u models.User
 
 		body, _ := io.ReadAll(req.Body)
-		fmt.Println("----1", body)
 		err := json.Unmarshal([]byte(body), &u)
-		fmt.Println("----2", u)
 
 		if err != nil {
 			h.Logger.Debug("cannot decode request JSON body", zap.Error(err))
@@ -32,22 +30,16 @@ func (h *handler) UserRegister() http.HandlerFunc {
 			http.Error(res, "StatusBadRequest", http.StatusBadRequest)
 			return
 		}
-		fmt.Println("----2.1", u)
 
 		usrID, usrL := h.find(h.usrS, u.Login)
-		fmt.Println("----3", usrID, usrL)
 
 		if usrID == 0 {
-			fmt.Println("----4", usrID, usrL, usrID == 0)
-
 			h.Logger.Info("CreateNewUser :", zap.String("user_id", u.Login))
 			err := h.create(h.usrC, u.Login, u.Password)
 			if err != nil {
 				h.Logger.Error("CreateNewUser :", zap.String("err", err.Error()))
 			}
 		} else {
-			fmt.Println("----5", usrID, usrL, usrID == 0)
-
 			h.Logger.Info("StatusConflict :", zap.String("user_id", usrL))
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return

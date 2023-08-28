@@ -1,7 +1,6 @@
 package user
 
 import (
-	"fmt"
 	"github.com/axelx/go-ya-diploma/internal/core"
 	"github.com/axelx/go-ya-diploma/internal/models"
 	"github.com/axelx/go-ya-diploma/internal/utils"
@@ -19,14 +18,8 @@ type User struct {
 }
 
 func (u User) SearchOne(db *sqlx.DB, lg *zap.Logger, login string) (int, string) {
-	fmt.Println("----2.4   core.FindUserByLogin", login)
-
 	usrID, log := core.FindUserByLogin(db, lg, login)
-	fmt.Println(usrID, log, "SearchOne - user")
-
 	return usrID, log
-
-	//return 5, "user_" + login
 }
 func (u User) SearchMany(s string) ([]int, []string) {
 	return []int{5}, []string{"user_" + s}
@@ -36,11 +29,6 @@ func (u User) Create(db *sqlx.DB, lg *zap.Logger, login, password string) error 
 	err := core.CreateNewUser(db, lg, login, password)
 	return err
 }
-
-//func FindUserByLogin(db *sqlx.DB, lg *zap.Logger, login string) (models.User, error) {
-//	u, err := core.FindUserByLogin(db, lg, login)
-//	return u, err
-//}
 
 func CreateNewUser(db *sqlx.DB, lg *zap.Logger, login, password string) error {
 	err := core.CreateNewUser(db, lg, login, password)
