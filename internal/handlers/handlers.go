@@ -92,7 +92,7 @@ func (h *handler) AddOrders() http.HandlerFunc {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
 			err := orders.AddOrder(h.db, h.Logger, userIDcookie, order, 0, h.chAdd)
 			if err != nil {
-				h.Logger.Error("Error AddOrders :", zap.String("about ERR", err.Error()))
+				h.Logger.Info("Error AddOrders :", zap.String("about ERR", err.Error()))
 				http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
 				return
 			}
@@ -110,7 +110,7 @@ func (h *handler) Orders() http.HandlerFunc {
 		userID := user.GetIDviaCookie(req)
 		os, err := orders.FindOrders(h.db, h.Logger, userID)
 		if err != nil {
-			h.Logger.Error("handler Orders", zap.String("orders.FindOrders", err.Error()))
+			h.Logger.Info("handler Orders", zap.String("orders.FindOrders", err.Error()))
 		}
 
 		res.Header().Set("Content-Type", "application/json")
@@ -119,7 +119,7 @@ func (h *handler) Orders() http.HandlerFunc {
 		if len(os) == 0 {
 			_, err := res.Write([]byte("[]"))
 			if err != nil {
-				h.Logger.Error("Orders: not found any orders", zap.String("StatusInternalServerError", err.Error()))
+				h.Logger.Info("Orders: not found any orders", zap.String("StatusInternalServerError", err.Error()))
 				http.Error(res, "StatusInternalServerError", http.StatusInternalServerError)
 				return
 			}
@@ -127,11 +127,11 @@ func (h *handler) Orders() http.HandlerFunc {
 		} else {
 			ordersJSON, err := json.Marshal(os)
 			if err != nil {
-				h.Logger.Error("handler Orders", zap.String("json.Marshal(os)", err.Error()))
+				h.Logger.Info("handler Orders", zap.String("json.Marshal(os)", err.Error()))
 			}
 			_, err = res.Write(ordersJSON)
 			if err != nil {
-				h.Logger.Error("Orders", zap.String("StatusInternalServerError", err.Error()))
+				h.Logger.Info("Orders", zap.String("StatusInternalServerError", err.Error()))
 				http.Error(res, "StatusInternalServerError", http.StatusInternalServerError)
 				return
 			}
@@ -151,11 +151,11 @@ func (h *handler) Balance() http.HandlerFunc {
 		userID := user.GetIDviaCookie(req)
 		ubs, err := user.Balance(h.db, h.Logger, userID)
 		if err != nil {
-			h.Logger.Error("handler Balance", zap.String("user.Balance", err.Error()))
+			h.Logger.Info("handler Balance", zap.String("user.Balance", err.Error()))
 		}
 		balanceJSON, err := json.Marshal(ubs)
 		if err != nil {
-			h.Logger.Error("handler Balance", zap.String("json.Marshal(ubs)", err.Error()))
+			h.Logger.Info("handler Balance", zap.String("json.Marshal(ubs)", err.Error()))
 		}
 		size, err := res.Write(balanceJSON)
 
@@ -194,7 +194,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 
 		//ubs, err := user.Balance(h.db, h.Logger, userID)
 		//if err != nil {
-		//	h.Logger.Error("handler Withdraw", zap.String("user.Balance", err.Error()))
+		//	h.Logger.Info("handler Withdraw", zap.String("user.Balance", err.Error()))
 		//}
 		//avBalance := ubs.Current - ubs.Withdrawn
 		//if avBalance < sumWithdraw {
@@ -204,7 +204,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 
 		o, err := orders.FindOrder(h.db, h.Logger, order)
 		if err != nil {
-			h.Logger.Error("handler Withdraw", zap.String("orders.FindOrder", err.Error()))
+			h.Logger.Info("handler Withdraw", zap.String("orders.FindOrder", err.Error()))
 		}
 
 		if o.UserID > 0 && o.UserID == userID {
@@ -223,7 +223,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
 			err = orders.AddOrder(h.db, h.Logger, userID, order, sumWithdraw, h.chAdd)
 			if err != nil {
-				h.Logger.Error("handler Withdraw", zap.String("orders.AddOrder", err.Error()))
+				h.Logger.Info("handler Withdraw", zap.String("orders.AddOrder", err.Error()))
 			}
 		}
 
@@ -239,7 +239,7 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 		userID := user.GetIDviaCookie(req)
 		os, err := orders.FindOrders(h.db, h.Logger, userID)
 		if err != nil {
-			h.Logger.Error("handler Withdrawals", zap.String("orders.FindOrders", err.Error()))
+			h.Logger.Info("handler Withdrawals", zap.String("orders.FindOrders", err.Error()))
 		}
 
 		res.Header().Set("Content-Type", "application/json")
@@ -257,7 +257,7 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 
 		ordersJSON, err := json.Marshal(os)
 		if err != nil {
-			h.Logger.Error("handler Withdrawals", zap.String("json.Marshal(os)", err.Error()))
+			h.Logger.Info("handler Withdrawals", zap.String("json.Marshal(os)", err.Error()))
 		}
 		size, err := res.Write(ordersJSON)
 

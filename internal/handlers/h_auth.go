@@ -36,7 +36,7 @@ func (h *handler) UserRegister() http.HandlerFunc {
 			h.Logger.Info("CreateNewUser :", zap.String("user_id", u.Login))
 			err := h.create(h.usrC, u.Login, u.Password)
 			if err != nil {
-				h.Logger.Error("CreateNewUser :", zap.String("err", err.Error()))
+				h.Logger.Info("CreateNewUser :", zap.String("err", err.Error()))
 			}
 		} else {
 			h.Logger.Info("StatusConflict :", zap.String("user_id", usrL))
@@ -55,7 +55,7 @@ func (h *handler) UserRegister() http.HandlerFunc {
 		res.WriteHeader(http.StatusOK)
 		size, err := res.Write([]byte("{\"login\":\"" + u.Login + "\", \"password\":\"" + u.Password + "\"}"))
 		if err != nil {
-			h.Logger.Error("Error UserRegister",
+			h.Logger.Info("Error UserRegister",
 				zap.String("about func", "UserRegister"),
 				zap.String("about ERR", err.Error()),
 			)
