@@ -114,8 +114,9 @@ func (h *handler) Orders() http.HandlerFunc {
 		}
 
 		res.Header().Set("Content-Type", "application/json")
+		res.WriteHeader(http.StatusOK)
+
 		if len(os) == 0 {
-			//res.WriteHeader(http.StatusNoContent)
 			_, err := res.Write([]byte("[]"))
 			if err != nil {
 				h.Logger.Error("Orders: not found any orders", zap.String("StatusInternalServerError", err.Error()))
@@ -124,11 +125,7 @@ func (h *handler) Orders() http.HandlerFunc {
 			}
 			return
 		} else {
-
-			res.WriteHeader(http.StatusOK)
-
 			ordersJSON, err := json.Marshal(os)
-			fmt.Println("ordersJSON", ordersJSON)
 			if err != nil {
 				h.Logger.Error("handler Orders", zap.String("json.Marshal(os)", err.Error()))
 			}
@@ -150,6 +147,7 @@ func (h *handler) Orders() http.HandlerFunc {
 func (h *handler) Balance() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
+		res.Header().Set("Content-Type", "application/json")
 		userID := user.GetIDviaCookie(req)
 		ubs, err := user.Balance(h.db, h.Logger, userID)
 		if err != nil {
@@ -241,7 +239,15 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 			h.Logger.Error("handler Withdrawals", zap.String("orders.FindOrders", err.Error()))
 		}
 
+		res.Header().Set("Content-Type", "application/json")
 		if len(os) == 0 {
+			_, err := res.Write([]byte("[]"))
+
+			if err != nil {
+				h.Logger.Info("Withdrawals", zap.String("res.Write([]byte([]))", err.Error()))
+				http.Error(res, "StatusInternalServerError", http.StatusInternalServerError)
+				return
+			}
 			res.WriteHeader(http.StatusNoContent)
 			return
 		}
@@ -253,7 +259,7 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 		size, err := res.Write(ordersJSON)
 
 		if err != nil {
-			h.Logger.Info("Orders", zap.String("StatusInternalServerError", err.Error()))
+			h.Logger.Info("Withdrawals", zap.String("StatusInternalServerError", err.Error()))
 			http.Error(res, "StatusInternalServerError", http.StatusInternalServerError)
 			return
 		}
