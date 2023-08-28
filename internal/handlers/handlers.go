@@ -113,26 +113,35 @@ func (h *handler) Orders() http.HandlerFunc {
 			h.Logger.Error("handler Orders", zap.String("orders.FindOrders", err.Error()))
 		}
 
-		if len(os) == 0 {
-			res.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		ordersJSON, err := json.Marshal(os)
-		if err != nil {
-			h.Logger.Error("handler Orders", zap.String("json.Marshal(os)", err.Error()))
-		}
-		size, err := res.Write(ordersJSON)
-		if err != nil {
-			h.Logger.Error("Orders", zap.String("StatusInternalServerError", err.Error()))
-			http.Error(res, "StatusInternalServerError", http.StatusInternalServerError)
-			return
-		}
 		res.Header().Set("Content-Type", "application/json")
-		res.WriteHeader(http.StatusOK)
+		if len(os) == 0 {
+			//res.WriteHeader(http.StatusNoContent)
+			_, err := res.Write([]byte("[]"))
+			if err != nil {
+				h.Logger.Error("Orders: not found any orders", zap.String("StatusInternalServerError", err.Error()))
+				http.Error(res, "StatusInternalServerError", http.StatusInternalServerError)
+				return
+			}
+			return
+		} else {
+
+			res.WriteHeader(http.StatusOK)
+
+			ordersJSON, err := json.Marshal(os)
+			fmt.Println("ordersJSON", ordersJSON)
+			if err != nil {
+				h.Logger.Error("handler Orders", zap.String("json.Marshal(os)", err.Error()))
+			}
+			_, err = res.Write(ordersJSON)
+			if err != nil {
+				h.Logger.Error("Orders", zap.String("StatusInternalServerError", err.Error()))
+				http.Error(res, "StatusInternalServerError", http.StatusInternalServerError)
+				return
+			}
+		}
 
 		h.Logger.Info("sending HTTP response",
-			zap.String("size", strconv.Itoa(size)),
+			//zap.String("size", strconv.Itoa(size)),
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
 	}
