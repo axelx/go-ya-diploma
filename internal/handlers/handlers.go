@@ -173,6 +173,7 @@ func (h *handler) Balance() http.HandlerFunc {
 
 func (h *handler) Withdraw() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
+		fmt.Println("------Withdraw--start---")
 		ro, _ := io.ReadAll(req.Body)
 		var dat map[string]interface{}
 		err := json.Unmarshal(ro, &dat)
@@ -183,6 +184,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 		order := dat["order"].(string)
 		wdrw := dat["sum"]
 		sumWithdraw := wdrw.(float64)
+		fmt.Println("------Withdraw----", order, wdrw)
 
 		if !orders.LunaCheck(order, h.Logger) {
 			http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
@@ -190,16 +192,15 @@ func (h *handler) Withdraw() http.HandlerFunc {
 		}
 		userID := user.GetIDviaCookie(req)
 
-		ubs, err := user.Balance(h.db, h.Logger, userID)
-		if err != nil {
-			h.Logger.Error("handler Withdraw", zap.String("user.Balance", err.Error()))
-		}
-		avBalance := ubs.Current - ubs.Withdrawn
-
-		if avBalance < sumWithdraw {
-			http.Error(res, "StatusPaymentRequired", http.StatusPaymentRequired)
-			return
-		}
+		//ubs, err := user.Balance(h.db, h.Logger, userID)
+		//if err != nil {
+		//	h.Logger.Error("handler Withdraw", zap.String("user.Balance", err.Error()))
+		//}
+		//avBalance := ubs.Current - ubs.Withdrawn
+		//if avBalance < sumWithdraw {
+		//	http.Error(res, "StatusPaymentRequired", http.StatusPaymentRequired)
+		//	return
+		//}
 
 		o, err := orders.FindOrder(h.db, h.Logger, order)
 		if err != nil {
@@ -215,6 +216,8 @@ func (h *handler) Withdraw() http.HandlerFunc {
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return
 		}
+
+		fmt.Println("------Withdraw----")
 
 		if err != nil {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
