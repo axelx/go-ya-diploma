@@ -14,7 +14,7 @@ func FindOrder(db *sqlx.DB, lg *zap.Logger, orderID string) (models.Order, error
 	var o models.Order
 	err := row.Scan(&o.UserID, &o.Number)
 	if err != nil {
-		lg.Error("Error FindOrder:", zap.String("about ERR", err.Error()))
+		lg.Info("FindOrder: order not found", zap.String("about ERR", err.Error()))
 		return models.Order{}, err
 	}
 	return o, nil

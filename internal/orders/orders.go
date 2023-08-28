@@ -43,13 +43,11 @@ func (o Order) Talk() string {
 }
 
 func LunaCheck(order string, lg *zap.Logger) bool {
-	a := []rune(order)
-
 	sum := 0
-	for i, r := range a {
-
-		num, err := strconv.Atoi(string(r))
+	for i := len(order); i > 0; i-- {
+		num, err := strconv.Atoi(string(order[i-1]))
 		if err != nil {
+			lg.Info("orders LunaCheck ошибка", zap.String("about", ""))
 			return false
 		}
 		digit := num

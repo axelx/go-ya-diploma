@@ -66,6 +66,7 @@ func (h *handler) AddOrders() http.HandlerFunc {
 		ro, _ := io.ReadAll(req.Body)
 		order := string(ro)
 		if !orders.LunaCheck(order, h.Logger) {
+			h.Logger.Info("AddOrders : не прошёл проверку lunacheck ", zap.String("order", order))
 			http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
 			return
 		}

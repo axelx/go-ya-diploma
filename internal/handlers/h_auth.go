@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/axelx/go-ya-diploma/internal/models"
 	"github.com/axelx/go-ya-diploma/internal/user"
 	"go.uber.org/zap"
@@ -47,8 +46,6 @@ func (h *handler) UserRegister() http.HandlerFunc {
 		res.Header().Set("Content-Type", "application/json")
 
 		if cookie, b := user.AuthUser(h.db, h.Logger, u.Login, u.Password); b {
-			fmt.Println("----6", cookie, b)
-
 			http.SetCookie(res, &cookie)
 			res.WriteHeader(http.StatusOK)
 		} else {
@@ -68,8 +65,6 @@ func (h *handler) UserRegister() http.HandlerFunc {
 			zap.String("size", strconv.Itoa(size)),
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
-		fmt.Println("----7 end")
-
 	}
 }
 func (h *handler) UserAuth() http.HandlerFunc {
