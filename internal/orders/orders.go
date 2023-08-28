@@ -51,7 +51,7 @@ func LunaCheck(order string, lg *zap.Logger) bool {
 			return false
 		}
 		digit := num
-		if (i+1)%2 == 1 {
+		if (i)%2 == 1 {
 			digit *= 2
 			if digit > 9 {
 				digit -= 9
