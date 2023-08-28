@@ -44,6 +44,7 @@ func (o Order) Talk() string {
 
 func LunaCheck(order string, lg *zap.Logger) bool {
 	sum := 0
+	ord := 0
 	for i := len(order); i > 0; i-- {
 		num, err := strconv.Atoi(string(order[i-1]))
 		if err != nil {
@@ -51,13 +52,14 @@ func LunaCheck(order string, lg *zap.Logger) bool {
 			return false
 		}
 		digit := num
-		if (i)%2 == 1 {
+		if (ord)%2 == 1 {
 			digit *= 2
 			if digit > 9 {
 				digit -= 9
 			}
 		}
 		sum += digit
+		ord += 1
 	}
 
 	return sum%10 == 0
