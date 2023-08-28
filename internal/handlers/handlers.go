@@ -94,6 +94,7 @@ func (h *handler) AddOrders() http.HandlerFunc {
 				http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
 				return
 			}
+			res.WriteHeader(http.StatusAccepted)
 		}
 
 		h.Logger.Info("sending HTTP response UpdatedMetric",
