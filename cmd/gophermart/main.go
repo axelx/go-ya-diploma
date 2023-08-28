@@ -103,7 +103,7 @@ func checkAccural(urlAccrualServer, order string, chProcOrder chan string, count
 }
 
 func addToAccural(urlAccrualServer, order string, chNewOrder chan string) {
-
+	fmt.Println(" main addAccrual. order:", order, "urlAccrualServer:", urlAccrualServer)
 	client := &http.Client{}
 
 	orderJSON, err := json.Marshal(map[string]string{"order": order})
@@ -114,7 +114,7 @@ func addToAccural(urlAccrualServer, order string, chNewOrder chan string) {
 
 	resp, err := client.Post(urlAccrualServer+"api/orders", "application/json", bytes.NewBuffer(orderJSON))
 	if err != nil {
-		fmt.Println("Error reporting metrics:", err)
+		fmt.Println("Error reporting:", err)
 	}
 
 	fmt.Println("addAccrual", string(orderJSON), resp.StatusCode, 888)
