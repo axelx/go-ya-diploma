@@ -78,11 +78,12 @@ func main() {
 }
 
 func checkAccural(urlAccrualServer, order string, chProcOrder chan string, countPerMin *int, db *sqlx.DB, lg *zap.Logger) {
+	fmt.Println("checkAccural")
 
 	client := &http.Client{}
 	resp2, err := client.Get(urlAccrualServer + "api/orders/" + order)
 	if err != nil {
-		fmt.Println("Error reporting:", err)
+		fmt.Println("Error reporting checkAccural:", err)
 		// скорее всего тут ошибку должен получить
 		//*countPerMin += 5
 	} else {
@@ -114,7 +115,7 @@ func addToAccural(urlAccrualServer, order string, chNewOrder chan string) {
 
 	resp, err := client.Post(urlAccrualServer+"api/orders", "application/json", bytes.NewBuffer(orderJSON))
 	if err != nil {
-		fmt.Println("Error reporting:", err)
+		fmt.Println("Error reporting addToAccural:", err)
 	}
 
 	fmt.Println("addAccrual", string(orderJSON), resp.StatusCode, 888)

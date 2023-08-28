@@ -45,7 +45,7 @@ func parseFlagsServer(c *ConfigServer) {
 		c.FlagDatabaseDSN = envDatabaseDSN
 	}
 	if envAccrualSystemAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS"); envAccrualSystemAddress != "" {
-		c.FlagLogLevel = envAccrualSystemAddress
+		c.FlagAccrualSystemAddress = envAccrualSystemAddress
 	}
 	//if envLogLevel := os.Getenv("LOG_LEVEL"); envLogLevel != "" {
 	//	c.FlagLogLevel = envLogLevel
