@@ -8,6 +8,7 @@ import (
 	"github.com/axelx/go-ya-diploma/internal/utils"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
+	"strconv"
 
 	"io"
 	"sync"
@@ -36,20 +37,20 @@ func main() {
 		lg.Error("Error not connect to db", zap.String("about ERR", err.Error()))
 	}
 
-	chAddOrder := make(chan string, 100)
+	//chAddOrder := make(chan string, 100)
 	chNewOrder := make(chan string, 100)
 	chProcOrder := make(chan string, 500)
 	countPerMin := 10 //00
 
-	wg.Add(1)
-	//Горутина добавления в accrual
-	go func() {
-		sleepMillisecond := 55 * 1000 / 60
-		for {
-			addToAccural(conf.FlagAccrualSystemAddress, <-chAddOrder, chNewOrder)
-			time.Sleep(time.Millisecond * time.Duration(sleepMillisecond))
-		}
-	}()
+	//wg.Add(1)
+	////Горутина добавления в accrual
+	//go func() {
+	//	sleepMillisecond := 55 * 1000 / 60
+	//	for {
+	//		addToAccural(conf.FlagAccrualSystemAddress, <-chAddOrder, chNewOrder)
+	//		time.Sleep(time.Millisecond * time.Duration(sleepMillisecond))
+	//	}
+	//}()
 	wg.Add(1)
 	go func(countPerMin *int, db *sqlx.DB, lg *zap.Logger) {
 		// точка отправки сообщений.
@@ -69,7 +70,7 @@ func main() {
 		}
 	}(&countPerMin, db, lg)
 
-	hd := handlers.New(or, us, us, lg, db, chAddOrder)
+	hd := handlers.New(or, us, us, lg, db, chNewOrder)
 	if err := http.ListenAndServe(conf.FlagRunAddr, hd.Router()); err != nil {
 		panic(err)
 	}
@@ -90,6 +91,7 @@ func checkAccural(urlAccrualServer, order string, chProcOrder chan string, count
 	} else {
 		fmt.Println("checkAccural")
 		body, _ := io.ReadAll(resp2.Body)
+
 		resp2.Body.Close()
 
 		var dat map[string]interface{}
@@ -97,7 +99,7 @@ func checkAccural(urlAccrualServer, order string, chProcOrder chan string, count
 		fmt.Println("main checkAccural--", dat, dat["status"], "-", dat["accrual"], "-")
 		fmt.Printf("%T\n\n", dat["accrual"])
 
-		lg.Info("main checkAccural", zap.String("response accrual", string(body)))
+		lg.Info("main checkAccural", zap.String("response accrual", string(body)), zap.String("response body.status", strconv.Itoa(resp2.StatusCode)))
 		orders.UpdateStatus(db, lg, order, fmt.Sprintf("%v", dat["status"]), utils.GetFloat(dat["accrual"]))
 		if dat["status"] == "PROCESSING" {
 			fmt.Println("добавляем в канал процесс", order)
