@@ -72,8 +72,10 @@ func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, order string, withdrawn f
 }
 
 func UpdateStatusOrder(db *sqlx.DB, lg *zap.Logger, orderID, status string, accrual int) error {
+	//_, err := db.ExecContext(context.Background(),
+	//	`UPDATE orders SET status = $1,  accrual = $2 WHERE number = $3`, status, accrual, orderID)
 	_, err := db.ExecContext(context.Background(),
-		`UPDATE orders SET status = $1,  accrual = $2 WHERE number = $3`, status, accrual, orderID)
+		`UPDATE orders SET status = $1 WHERE number = $2`, status, orderID)
 	if err != nil {
 		lg.Error("Error AddOrder:", zap.String("about ERR", err.Error()))
 		return err
