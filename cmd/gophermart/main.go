@@ -94,8 +94,9 @@ func checkAccural(urlAccrualServer, order string, chProcOrder chan string, count
 
 		var dat map[string]interface{}
 		json.Unmarshal(body, &dat)
+		fmt.Println("main checkAccural--", dat, dat["status"], "-", dat["accrual"], "-")
+		fmt.Printf("%T\n", dat["accrual"])
 		orders.UpdateStatus(db, lg, order, fmt.Sprintf("%v", dat["status"]), utils.GetFloat(dat["accrual"]))
-		fmt.Println("main checkAccural--", dat, dat["status"])
 		if dat["status"] == "PROCESSING" {
 			fmt.Println("добавляем в канал процесс", order)
 			chProcOrder <- order

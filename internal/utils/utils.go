@@ -23,6 +23,9 @@ func TimeFormat(s *time.Time) string {
 }
 
 func GetFloat(unk interface{}) float64 {
+	if unk == nil {
+		return 0.0
+	}
 	floatType := reflect.TypeOf(float64(0))
 	v := reflect.ValueOf(unk)
 	v = reflect.Indirect(v)
