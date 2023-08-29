@@ -104,11 +104,9 @@ func FindWithdrawalsOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Or
 
 	res := []models.Order{}
 
-	for i, o := range os {
-		if o.Accrual != 0 {
-			os[i].Accrual = o.Accrual / 100
-		}
+	for _, o := range os {
 		if o.Withdrawn > 0 {
+			o.Withdrawn = o.Withdrawn / 100
 			res = append(res, o)
 		}
 		fmt.Println("----orders FindOrders():", o)
