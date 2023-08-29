@@ -69,7 +69,7 @@ func LunaCheck(order string, lg *zap.Logger) bool {
 func FindOrder(db *sqlx.DB, lg *zap.Logger, orderID string) (models.Order, error) {
 	o, err := core.FindOrder(db, lg, orderID)
 	if err != nil {
-		lg.Error("order FindOrder", zap.String("err", err.Error()))
+		lg.Info("order FindOrder", zap.String("err", err.Error()))
 		return o, err
 	}
 	return o, err
@@ -78,7 +78,13 @@ func FindOrder(db *sqlx.DB, lg *zap.Logger, orderID string) (models.Order, error
 func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error) {
 	os, err := core.FindOrders(db, lg, userID)
 	if err != nil {
-		lg.Error("order FindOrders", zap.String("err", err.Error()))
+		lg.Info("order FindOrders", zap.String("err", err.Error()))
+	}
+
+	for i, o := range os {
+		if o.Accrual != 0 {
+			os[i].Accrual = o.Accrual / 100
+		}
 	}
 
 	return os, nil

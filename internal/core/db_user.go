@@ -23,7 +23,7 @@ func CreateNewUser(db *sqlx.DB, lg *zap.Logger, login, password string) error {
 	_, err := db.ExecContext(context.Background(),
 		`INSERT INTO users (login, password) VALUES ($1, $2)`, login, password)
 	if err != nil {
-		lg.Error("Error CreateNewUser :", zap.String("about ERR", err.Error()))
+		lg.Info("Error CreateNewUser :", zap.String("about ERR", err.Error()))
 
 		return err
 	}
@@ -37,7 +37,7 @@ func AuthUser(db *sqlx.DB, lg *zap.Logger, login, password string) models.User {
 	var user models.User
 	err := row.Scan(&user.ID, &user.Login, &user.Password)
 	if err != nil {
-		lg.Error("Error AuthUser :", zap.String("about ERR", err.Error()))
+		lg.Info("Error AuthUser :", zap.String("about ERR", err.Error()))
 		return models.User{}
 	}
 	return user

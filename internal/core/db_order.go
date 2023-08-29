@@ -41,7 +41,7 @@ func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error)
 	}
 	err = rows.Err()
 	if err != nil {
-		lg.Error("Error FindOrders:", zap.String("about ERR", err.Error()))
+		lg.Info("Error FindOrders:", zap.String("about ERR", err.Error()))
 		return nil, err
 	}
 	return orders, nil
@@ -55,7 +55,7 @@ func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, order string, withdrawn f
 			`INSERT INTO orders (number, status, user_id, withdrawn, uploaded_at) VALUES ($1, $2, $3, $4, NOW())`,
 			order, "NEW", userID, w)
 		if err != nil {
-			lg.Error("Error AddOrder:", zap.String("about ERR", err.Error()))
+			lg.Info("Error AddOrder:", zap.String("about ERR", err.Error()))
 			return err
 		}
 
@@ -63,7 +63,7 @@ func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, order string, withdrawn f
 		_, err := db.ExecContext(context.Background(),
 			`INSERT INTO orders (number, status, user_id, uploaded_at) VALUES ($1, $2, $3, NOW())`, order, "NEW", userID)
 		if err != nil {
-			lg.Error("Error AddOrder:", zap.String("about ERR", err.Error()))
+			lg.Info("Error AddOrder:", zap.String("about ERR", err.Error()))
 			return err
 		}
 	}
@@ -77,7 +77,7 @@ func UpdateStatusOrder(db *sqlx.DB, lg *zap.Logger, orderID, status string, accr
 	//_, err := db.ExecContext(context.Background(),
 	//	`UPDATE orders SET status = $1 WHERE number = $2`, status, orderID)
 	if err != nil {
-		lg.Error("Error AddOrder:", zap.String("about ERR", err.Error()))
+		lg.Info("Error AddOrder:", zap.String("about ERR", err.Error()))
 		return err
 	}
 	return err
