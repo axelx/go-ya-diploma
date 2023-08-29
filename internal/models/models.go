@@ -23,9 +23,9 @@ type User struct {
 
 type Order struct {
 	ID         int        `json:"id,omitempty"`
-	Number     string     `json:"order,omitempty"`
+	Number     string     `json:"number,omitempty"`
 	Accrual    float64    `json:"accrual"`
-	Withdrawn  int        `json:"Sum"`
+	Withdrawn  int        `json:"sum"`
 	Status     string     `json:"status,omitempty"`
 	UploadedAt *time.Time `json:"uploaded_at,omitempty"`
 	UserID     int        `json:"user_id,omitempty"`
