@@ -86,11 +86,10 @@ func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int, chAdd chan string) ([]m
 		if o.Accrual != 0 {
 			os[i].Accrual = o.Accrual / 100
 		}
-		if o.Accrual == 0 && o.Status == "NEW" {
-
-			fmt.Println("----orders FindOrders(). добавляем в поток для начисления заказ. Ж", o)
-			chAdd <- o.Number
-		}
+		//if o.Accrual == 0 && o.Status == "NEW" {
+		//
+		//	chAdd <- o.Number
+		//}
 		fmt.Println("----orders FindOrders():", o)
 	}
 
@@ -101,7 +100,8 @@ func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, orderID string, withdrawn
 	err := core.AddOrder(db, lg, userID, orderID, withdrawn)
 	if err == nil {
 		lg.Info("order AddOrder and add to channel", zap.String("about", ""))
-		//chAdd <- orderID
+		fmt.Println("----orders FindOrders(). добавляем в поток для начисления заказ. userIDЖ", userID, "orderID:", orderID)
+		chAdd <- orderID
 	}
 	return err
 }

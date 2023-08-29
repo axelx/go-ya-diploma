@@ -74,15 +74,15 @@ func (h *handler) AddOrders() http.HandlerFunc {
 
 		//o, err := orders.FindOrder(h.db, h.Logger, order)
 		usrID, ordN := h.find(h.ordS, order)
-		fmt.Println("----", usrID, "-", ordN)
+		fmt.Println("handlers AddOrders() ----", usrID, "-", ordN)
 
 		if usrID > 0 && usrID == userIDcookie {
-			fmt.Println("----", usrID, ordN)
+			fmt.Println("handlers AddOrders()----", usrID, ordN)
 			h.Logger.Info("AddOrders : заказ существует уже у этого пользователя", zap.String("order", order))
 			res.WriteHeader(http.StatusOK)
 			return
 		} else if usrID > 0 && usrID != userIDcookie {
-			fmt.Println("----", usrID, ordN)
+			fmt.Println("handlers AddOrders()----", usrID, ordN)
 			h.Logger.Info("AddOrders : заказ существует уже НО у другого пользователя", zap.String("order", order))
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return

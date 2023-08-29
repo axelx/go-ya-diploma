@@ -67,8 +67,7 @@ func Balance(db *sqlx.DB, lg *zap.Logger, userID int) (models.Balance, error) {
 		}
 	}
 
-	//b.Current = b.Current / 100
-	b.Current = 729.98
+	b.Current = b.Current / 100
 	b.Withdrawn = b.Withdrawn / 100
 
 	return b, err
