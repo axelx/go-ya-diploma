@@ -5,6 +5,7 @@ import (
 	"github.com/axelx/go-ya-diploma/internal/models"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"math"
 	"strconv"
 	"time"
 )
@@ -92,8 +93,10 @@ func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, orderID string, withdrawn
 	return err
 }
 
-func UpdateStatus(db *sqlx.DB, lg *zap.Logger, orderID, status string) error {
-	err := core.UpdateStatusOrder(db, lg, orderID, status)
+func UpdateStatus(db *sqlx.DB, lg *zap.Logger, orderID, status string, accrual float64) error {
+	accrual = accrual * 100
+	accrualInt := int(math.Round(accrual))
+	err := core.UpdateStatusOrder(db, lg, orderID, status, accrualInt)
 	if err != nil {
 		lg.Info("order AddOrder and add to channel", zap.String("about", ""))
 		return err

@@ -197,15 +197,17 @@ func (h *handler) Withdraw() http.HandlerFunc {
 		//	h.Logger.Info("handler Withdraw", zap.String("user.Balance", err.Error()))
 		//}
 		//avBalance := ubs.Current - ubs.Withdrawn
-		//if avBalance < sumWithdraw {
+		//if avBalan	ce < sumWithdraw {
 		//	http.Error(res, "StatusPaymentRequired", http.StatusPaymentRequired)
 		//	return
 		//}
+		fmt.Println("------Withdraw----4")
 
 		o, err := orders.FindOrder(h.db, h.Logger, order)
 		if err != nil {
 			h.Logger.Info("handler Withdraw", zap.String("orders.FindOrder", err.Error()))
 		}
+		fmt.Println("------Withdraw----5")
 
 		if o.UserID > 0 && o.UserID == userID {
 			h.Logger.Info("AddOrders : заказ существует уже у этого пользователя", zap.String("order", order))
@@ -217,7 +219,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 			return
 		}
 
-		fmt.Println("------Withdraw----")
+		fmt.Println("------Withdraw----6")
 
 		if err != nil {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))

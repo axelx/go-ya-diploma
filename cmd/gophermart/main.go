@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/axelx/go-ya-diploma/internal/user"
+	"github.com/axelx/go-ya-diploma/internal/utils"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 
@@ -91,11 +92,11 @@ func checkAccural(urlAccrualServer, order string, chProcOrder chan string, count
 		body, _ := io.ReadAll(resp2.Body)
 		resp2.Body.Close()
 
-		var dat map[string]string
+		var dat map[string]interface{}
 		json.Unmarshal(body, &dat)
-		orders.UpdateStatus(db, lg, order, dat["status"])
-		fmt.Println("main checkAccural--", dat)
-		if dat["status"] == "PROCESSED" {
+		orders.UpdateStatus(db, lg, order, fmt.Sprintf("%v", dat["status"]), utils.GetFloat(dat["accrual"]))
+		fmt.Println("main checkAccural--", dat, dat["status"])
+		if dat["status"] == "PROCESSING" {
 			fmt.Println("добавляем в канал процесс", order)
 			chProcOrder <- order
 		}
