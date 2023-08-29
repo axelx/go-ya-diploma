@@ -13,9 +13,9 @@ import (
 
 type Order struct {
 	ID         int        `json:"id,omitempty"`
-	Number     string     `json:"number,omitempty"`
+	Number     string     `json:"order,omitempty"`
 	Accrual    int        `json:"accrual"`
-	Withdrawn  int        `json:"withdrawn"`
+	Withdrawn  int        `json:"sum"`
 	Status     string     `json:"status,omitempty"`
 	UploadedAt *time.Time `json:"uploaded_at,omitempty"`
 	UserID     int        `json:"user_id,omitempty"`
@@ -86,28 +86,31 @@ func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int, chAdd chan string) ([]m
 		if o.Accrual != 0 {
 			os[i].Accrual = o.Accrual / 100
 		}
-		//if o.Accrual == 0 && o.Status == "NEW" {
-		//
-		//	chAdd <- o.Number
-		//}
+		if o.Withdrawn > 0 {
+			os[i].Withdrawn = o.Withdrawn / 100
+		}
 		fmt.Println("----orders FindOrders():", o)
 	}
 
 	return os, nil
 }
 
-func FindWithdrawalsOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error) {
+func FindWithdrawalsOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.OrderWithdrawal, error) {
 	os, err := core.FindOrders(db, lg, userID)
 	if err != nil {
 		lg.Info("order FindWithdrawalsOrders", zap.String("err", err.Error()))
 	}
 
-	res := []models.Order{}
+	res := []models.OrderWithdrawal{}
 
 	for _, o := range os {
+		ow := models.OrderWithdrawal{}
 		if o.Withdrawn > 0 {
 			o.Withdrawn = o.Withdrawn / 100
-			res = append(res, o)
+			ow.Withdrawn = o.Withdrawn
+			ow.Number = o.Number
+			ow.UploadedAt = o.UploadedAt
+			res = append(res, ow)
 		}
 		fmt.Println("----orders FindOrders():", o)
 	}
