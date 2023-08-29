@@ -63,7 +63,7 @@ func Balance(db *sqlx.DB, lg *zap.Logger, userID int) (models.Balance, error) {
 	if len(os) > 0 {
 		for _, o := range os {
 			b.Current += float64(o.Accrual)
-			b.Withdrawn += float64(o.Withdrawn)
+			b.Withdrawn += float64(o.Sum)
 		}
 	}
 

@@ -12,7 +12,7 @@ func FindOrder(db *sqlx.DB, lg *zap.Logger, orderID string) (models.Order, error
 		`SELECT user_id, number FROM orders WHERE number = $1`, orderID)
 
 	var o models.Order
-	err := row.Scan(&o.UserID, &o.Number)
+	err := row.Scan(&o.UserID, &o.Order)
 	if err != nil {
 		lg.Info("FindOrder: order not found", zap.String("about ERR", err.Error()))
 		return models.Order{}, err
@@ -33,7 +33,33 @@ func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error)
 
 	for rows.Next() {
 		var o models.Order
-		err = rows.Scan(&o.Number, &o.Accrual, &o.Withdrawn, &o.Status, &o.UploadedAt)
+		err = rows.Scan(&o.Order, &o.Accrual, &o.Sum, &o.Status, &o.UploadedAt)
+		if err != nil {
+			return nil, err
+		}
+		orders = append(orders, o)
+	}
+	err = rows.Err()
+	if err != nil {
+		lg.Info("Error FindOrders:", zap.String("about ERR", err.Error()))
+		return nil, err
+	}
+	return orders, nil
+}
+
+func FindWithdrawalOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error) {
+
+	rows, err := db.QueryContext(context.Background(),
+		` SELECT number,withdrawn,uploaded_at FROM orders WHERE user_id = $1 AND withdrawn > 0`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	orders := []models.Order{}
+	for rows.Next() {
+		var o models.Order
+		err = rows.Scan(&o.Order, &o.Sum, &o.UploadedAt)
 		if err != nil {
 			return nil, err
 		}
