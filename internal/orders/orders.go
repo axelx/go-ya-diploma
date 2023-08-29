@@ -1,6 +1,7 @@
 package orders
 
 import (
+	"fmt"
 	"github.com/axelx/go-ya-diploma/internal/core"
 	"github.com/axelx/go-ya-diploma/internal/models"
 	"github.com/jmoiron/sqlx"
@@ -86,8 +87,11 @@ func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int, chAdd chan string) ([]m
 			os[i].Accrual = o.Accrual / 100
 		}
 		if o.Accrual == 0 && o.Status == "NEW" {
+
+			fmt.Println("----orders FindOrders(). добавляем в поток для начисления заказ. Ж", o)
 			chAdd <- o.Number
 		}
+		fmt.Println("----orders FindOrders():", o)
 	}
 
 	return os, nil

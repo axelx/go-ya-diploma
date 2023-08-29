@@ -109,6 +109,7 @@ func (h *handler) Orders() http.HandlerFunc {
 
 		userID := user.GetIDviaCookie(req)
 		os, err := orders.FindOrders(h.db, h.Logger, userID, h.chAdd)
+		fmt.Println("----handlers Orders()", userID, os)
 		if err != nil {
 			h.Logger.Info("handler Orders", zap.String("orders.FindOrders", err.Error()))
 		}
