@@ -75,7 +75,7 @@ func FindOrder(db *sqlx.DB, lg *zap.Logger, orderID string) (models.Order, error
 	return o, err
 }
 
-func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error) {
+func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int, chAdd chan string) ([]models.Order, error) {
 	os, err := core.FindOrders(db, lg, userID)
 	if err != nil {
 		lg.Info("order FindOrders", zap.String("err", err.Error()))
@@ -84,6 +84,9 @@ func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error)
 	for i, o := range os {
 		if o.Accrual != 0 {
 			os[i].Accrual = o.Accrual / 100
+		}
+		if o.Accrual == 0 && o.Status == "NEW" {
+			chAdd <- o.Number
 		}
 	}
 
@@ -94,7 +97,7 @@ func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, orderID string, withdrawn
 	err := core.AddOrder(db, lg, userID, orderID, withdrawn)
 	if err == nil {
 		lg.Info("order AddOrder and add to channel", zap.String("about", ""))
-		chAdd <- orderID
+		//chAdd <- orderID
 	}
 	return err
 }

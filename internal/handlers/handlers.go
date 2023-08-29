@@ -108,7 +108,7 @@ func (h *handler) Orders() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		userID := user.GetIDviaCookie(req)
-		os, err := orders.FindOrders(h.db, h.Logger, userID)
+		os, err := orders.FindOrders(h.db, h.Logger, userID, h.chAdd)
 		if err != nil {
 			h.Logger.Info("handler Orders", zap.String("orders.FindOrders", err.Error()))
 		}
@@ -239,7 +239,7 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		userID := user.GetIDviaCookie(req)
-		os, err := orders.FindOrders(h.db, h.Logger, userID)
+		os, err := orders.FindOrders(h.db, h.Logger, userID, h.chAdd)
 		if err != nil {
 			h.Logger.Info("handler Withdrawals", zap.String("orders.FindOrders", err.Error()))
 		}
