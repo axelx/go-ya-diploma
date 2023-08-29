@@ -13,9 +13,9 @@ import (
 
 type Order struct {
 	ID         int        `json:"id,omitempty"`
-	Order      string     `json:"number,omitempty"`
+	Number     string     `json:"number,omitempty"`
 	Accrual    int        `json:"accrual"`
-	Sum        int        `json:"withdrawn"`
+	Withdrawn  int        `json:"withdrawn"`
 	Status     string     `json:"status,omitempty"`
 	UploadedAt *time.Time `json:"uploaded_at,omitempty"`
 	UserID     int        `json:"user_id,omitempty"`
@@ -28,7 +28,7 @@ func (o Order) SearchOne(db *sqlx.DB, lg *zap.Logger, orderNum string) (int, str
 		lg.Info("order SearchOne", zap.String("err", err.Error()))
 		return 0, ""
 	}
-	return ord.UserID, ord.Order
+	return ord.UserID, ord.Number
 }
 
 func (o Order) SearchMany(s string) ([]int, []string) {
@@ -103,17 +103,17 @@ func FindWithdrawalsOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Or
 	}
 
 	res := []models.Order{}
-	//
-	for _, o := range os {
-		//	//if o.Accrual != 0 {
-		//	//	os[i].Accrual = o.Accrual / 100
-		//	//}
-		if o.Sum > 0 {
+
+	for i, o := range os {
+		if o.Accrual != 0 {
+			os[i].Accrual = o.Accrual / 100
+		}
+		if o.Withdrawn > 0 {
 			res = append(res, o)
 		}
-		//	fmt.Println("----orders FindOrders():", o)
+		fmt.Println("----orders FindOrders():", o)
 	}
-	fmt.Println("---- orders FindWithdrawalOrders():", os)
+
 	return res, nil
 }
 
