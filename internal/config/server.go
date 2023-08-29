@@ -23,7 +23,7 @@ func NewConfigServer() *ConfigServer {
 		FlagRunAddr:              "",
 		FlagDatabaseDSN:          "",
 		FlagAccrualSystemAddress: "",
-		FlagLogLevel:             "info",
+		FlagLogLevel:             "fatal",
 	}
 	parseFlagsServer(&conf)
 
