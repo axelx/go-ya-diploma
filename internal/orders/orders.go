@@ -96,6 +96,27 @@ func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int, chAdd chan string) ([]m
 	return os, nil
 }
 
+func FindWithdrawalsOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error) {
+	os, err := core.FindOrders(db, lg, userID)
+	if err != nil {
+		lg.Info("order FindWithdrawalsOrders", zap.String("err", err.Error()))
+	}
+
+	res := []models.Order{}
+
+	for i, o := range os {
+		if o.Accrual != 0 {
+			os[i].Accrual = o.Accrual / 100
+		}
+		if o.Withdrawn > 0 {
+			res = append(res, o)
+		}
+		fmt.Println("----orders FindOrders():", o)
+	}
+
+	return res, nil
+}
+
 func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, orderID string, withdrawn float64, chAdd chan string) error {
 	err := core.AddOrder(db, lg, userID, orderID, withdrawn)
 	if err == nil {

@@ -240,7 +240,7 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		userID := user.GetIDviaCookie(req)
-		os, err := orders.FindOrders(h.db, h.Logger, userID, h.chAdd)
+		os, err := orders.FindWithdrawalsOrders(h.db, h.Logger, userID)
 		if err != nil {
 			h.Logger.Info("handler Withdrawals", zap.String("orders.FindOrders", err.Error()))
 		}
