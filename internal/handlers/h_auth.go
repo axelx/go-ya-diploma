@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/axelx/go-ya-diploma/internal/models"
-	"github.com/axelx/go-ya-diploma/internal/user"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -30,11 +29,11 @@ func (h *handler) UserRegister() http.HandlerFunc {
 			return
 		}
 
-		usrID, usrL := h.find(h.usrS, u.Login)
+		usrID, usrL := h.userdo.SearchOne(u.Login)
 
 		if usrID == 0 {
 			h.Logger.Info("CreateNewUser :", zap.String("user_id", u.Login))
-			err := h.create(h.usrC, u.Login, u.Password)
+			err := h.userdo.Create(u.Login, u.Password)
 			if err != nil {
 				h.Logger.Info("CreateNewUser :", zap.String("err", err.Error()))
 			}
@@ -45,7 +44,7 @@ func (h *handler) UserRegister() http.HandlerFunc {
 		}
 		res.Header().Set("Content-Type", "application/json")
 
-		if cookie, b := user.AuthUser(h.db, h.Logger, u.Login, u.Password); b {
+		if cookie, b := h.userdo.AuthUser(u.Login, u.Password); b {
 			http.SetCookie(res, &cookie)
 			res.WriteHeader(http.StatusOK)
 		} else {
@@ -87,7 +86,7 @@ func (h *handler) UserAuth() http.HandlerFunc {
 			return
 		}
 
-		if cookie, b := user.AuthUser(h.db, h.Logger, u.Login, u.Password); b {
+		if cookie, b := h.userdo.AuthUser(u.Login, u.Password); b {
 			http.SetCookie(res, &cookie)
 			res.WriteHeader(http.StatusOK)
 		} else {

@@ -2,8 +2,8 @@ package orders
 
 import (
 	"fmt"
-	"github.com/axelx/go-ya-diploma/internal/core"
 	"github.com/axelx/go-ya-diploma/internal/models"
+	"github.com/axelx/go-ya-diploma/internal/pg"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"math"
@@ -19,38 +19,55 @@ type Order struct {
 	Status     string     `json:"status,omitempty"`
 	UploadedAt *time.Time `json:"uploaded_at,omitempty"`
 	UserID     int        `json:"user_id,omitempty"`
+	DB         *sqlx.DB
+	LG         *zap.Logger
 }
 
-func (o Order) SearchOne(db *sqlx.DB, lg *zap.Logger, orderNum string) (int, string) {
+func (o Order) SearchIDs(orderNum string) (int, string) {
 
-	ord, err := core.FindOrder(db, lg, orderNum)
+	ord, err := pg.FindOrder(o.DB, o.LG, orderNum)
 	if err != nil {
-		lg.Info("order SearchOne", zap.String("err", err.Error()))
+		o.LG.Info("order SearchOne", zap.String("err", err.Error()))
 		return 0, ""
 	}
 	return ord.UserID, ord.Number
 }
 
-func (o Order) SearchMany(s string) ([]int, []string) {
-	return []int{5}, []string{"order_" + s}
+func (o Order) SearchMany(userID int) ([]models.Order, error) {
+	os, err := pg.FindOrders(o.DB, o.LG, userID)
+	if err != nil {
+		o.LG.Info("order FindOrders", zap.String("err", err.Error()))
+	}
+
+	for i, o := range os {
+		if o.Accrual != 0 {
+			os[i].Accrual = o.Accrual / 100
+		}
+		if o.Withdrawn > 0 {
+			os[i].Withdrawn = o.Withdrawn / 100
+		}
+	}
+
+	return os, nil
 }
 
-func (o Order) Create(db *sqlx.DB, lg *zap.Logger, login, password string) error {
-	err := core.CreateNewUser(db, lg, login, password)
+func (o Order) Create(userID int, orderID string, withdrawn float64, chAdd chan string) error {
+
+	err := pg.AddOrder(o.DB, o.LG, userID, orderID, withdrawn)
+	if err == nil {
+		o.LG.Info("order AddOrder and add to channel", zap.String("orderID", orderID))
+		chAdd <- orderID
+	}
 	return err
 }
 
-func (o Order) Talk() string {
-	return "order talk"
-}
-
-func LunaCheck(order string, lg *zap.Logger) bool {
+func (o Order) LunaCheck(order string) bool {
 	sum := 0
 	ord := 0
 	for i := len(order); i > 0; i-- {
 		num, err := strconv.Atoi(string(order[i-1]))
 		if err != nil {
-			lg.Info("orders LunaCheck ошибка", zap.String("about", ""))
+			o.LG.Info("orders LunaCheck ошибка", zap.String("about", ""))
 			return false
 		}
 		digit := num
@@ -67,36 +84,35 @@ func LunaCheck(order string, lg *zap.Logger) bool {
 	return sum%10 == 0
 }
 
-func FindOrder(db *sqlx.DB, lg *zap.Logger, orderID string) (models.Order, error) {
-	o, err := core.FindOrder(db, lg, orderID)
+func (o Order) FindOrder(orderID string) (models.Order, error) {
+	or, err := pg.FindOrder(o.DB, o.LG, orderID)
 	if err != nil {
-		lg.Info("order FindOrder", zap.String("err", err.Error()))
-		return o, err
+		o.LG.Info("order FindOrder", zap.String("err", err.Error()))
+		return or, err
 	}
-	return o, err
+	return or, err
 }
 
-func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int, chAdd chan string) ([]models.Order, error) {
-	os, err := core.FindOrders(db, lg, userID)
-	if err != nil {
-		lg.Info("order FindOrders", zap.String("err", err.Error()))
-	}
-
-	for i, o := range os {
-		if o.Accrual != 0 {
-			os[i].Accrual = o.Accrual / 100
-		}
-		if o.Withdrawn > 0 {
-			os[i].Withdrawn = o.Withdrawn / 100
-		}
-		fmt.Println("----orders FindOrders():", o)
-	}
-
-	return os, nil
-}
+//func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int, chAdd chan string) ([]models.Order, error) {
+//	os, err := pg.FindOrders(db, lg, userID)
+//	if err != nil {
+//		lg.Info("order FindOrders", zap.String("err", err.Error()))
+//	}
+//
+//	for i, o := range os {
+//		if o.Accrual != 0 {
+//			os[i].Accrual = o.Accrual / 100
+//		}
+//		if o.Withdrawn > 0 {
+//			os[i].Withdrawn = o.Withdrawn / 100
+//		}
+//	}
+//
+//	return os, nil
+//}
 
 func FindWithdrawalsOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.OrderWithdrawal, error) {
-	os, err := core.FindOrders(db, lg, userID)
+	os, err := pg.FindOrders(db, lg, userID)
 	if err != nil {
 		lg.Info("order FindWithdrawalsOrders", zap.String("err", err.Error()))
 	}
@@ -118,20 +134,19 @@ func FindWithdrawalsOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Or
 	return res, nil
 }
 
-func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, orderID string, withdrawn float64, chAdd chan string) error {
-	err := core.AddOrder(db, lg, userID, orderID, withdrawn)
-	if err == nil {
-		lg.Info("order AddOrder and add to channel", zap.String("about", ""))
-		fmt.Println("----orders FindOrders(). добавляем в поток для начисления заказ. userIDЖ", userID, "orderID:", orderID)
-		chAdd <- orderID
-	}
-	return err
-}
+//func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, orderID string, withdrawn float64, chAdd chan string) error {
+//	err := pg.AddOrder(db, lg, userID, orderID, withdrawn)
+//	if err == nil {
+//		lg.Info("order AddOrder and add to channel", zap.String("orderID", orderID))
+//		chAdd <- orderID
+//	}
+//	return err
+//}
 
 func UpdateStatus(db *sqlx.DB, lg *zap.Logger, orderID, status string, accrual float64) error {
 	accrual = accrual * 100
 	accrualInt := int(math.Round(accrual))
-	err := core.UpdateStatusOrder(db, lg, orderID, status, accrualInt)
+	err := pg.UpdateStatusOrder(db, lg, orderID, status, accrualInt)
 	if err != nil {
 		lg.Info("order AddOrder and add to channel", zap.String("about", ""))
 		return err

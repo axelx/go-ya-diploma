@@ -1,4 +1,4 @@
-package core
+package pg
 
 import (
 	_ "github.com/jackc/pgx/stdlib"
@@ -13,7 +13,7 @@ func InitDB(url string, lg *zap.Logger) (*sqlx.DB, error) {
 
 	db, err := sqlx.Connect("pgx", url)
 	if err != nil {
-		lg.Error("Error not connect to db",
+		lg.Error("Error not connect to pg",
 			zap.String("URL", url),
 			zap.String("about ERR", err.Error()))
 		return db, err
@@ -23,7 +23,7 @@ func InitDB(url string, lg *zap.Logger) (*sqlx.DB, error) {
 	// миграции
 	err = createTable(db)
 	if err != nil {
-		lg.Error("Error not connect to db", zap.String("about ERR", err.Error()))
+		lg.Error("Error not connect to pg", zap.String("about ERR", err.Error()))
 		return db, err
 	}
 

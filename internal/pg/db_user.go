@@ -1,4 +1,4 @@
-package core
+package pg
 
 import (
 	"context"
@@ -15,7 +15,7 @@ func FindUserByLogin(db *sqlx.DB, lg *zap.Logger, login string) (int, string) {
 		lg.Info("Error FindUserByLogin : user not found", zap.String("about ERR", err.Error()))
 		return 0, ""
 	}
-	lg.Info("db FindUserByLogin :", zap.String("user_id", v.Login))
+	lg.Info("pg FindUserByLogin :", zap.String("user_id", v.Login))
 	return v.ID, v.Login
 }
 
@@ -34,13 +34,13 @@ func AuthUser(db *sqlx.DB, lg *zap.Logger, login, password string) models.User {
 	row := db.QueryRowContext(context.Background(),
 		` SELECT * FROM users WHERE login = $1 AND password = $2 `, login, password)
 
-	var user models.User
-	err := row.Scan(&user.ID, &user.Login, &user.Password)
+	var usr models.User
+	err := row.Scan(&usr.ID, &usr.Login, &usr.Password)
 	if err != nil {
 		lg.Info("Error AuthUser :", zap.String("about ERR", err.Error()))
 		return models.User{}
 	}
-	return user
+	return usr
 }
 
 func Balance(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error) {

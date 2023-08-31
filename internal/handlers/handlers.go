@@ -2,11 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/axelx/go-ya-diploma/internal/logger"
 	"github.com/axelx/go-ya-diploma/internal/middleware"
+	"github.com/axelx/go-ya-diploma/internal/models"
 	"github.com/axelx/go-ya-diploma/internal/orders"
-	"github.com/axelx/go-ya-diploma/internal/user"
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -15,33 +14,37 @@ import (
 	"strconv"
 )
 
-type searcher interface {
-	SearchOne(*sqlx.DB, *zap.Logger, string) (int, string)
-	SearchMany(string) ([]int, []string)
+type orderer interface {
+	SearchIDs(string) (int, string)
+	SearchMany(int) ([]models.Order, error)
+	FindOrder(string) (models.Order, error)
+	LunaCheck(string) bool
+	Create(int, string, float64, chan string) error
 }
-type creater interface {
-	Create(*sqlx.DB, *zap.Logger, string, string) error
+
+type userdo interface {
+	SearchOne(string) (int, string)
+	Create(string, string) error
+	AuthUser(string, string) (http.Cookie, bool)
+	GetIDviaCookie(req *http.Request) int
+	Balance(int) (models.Balance, error)
 }
 
 type handler struct {
-	ordS   searcher
-	usrS   searcher
-	ordC   creater
-	usrC   creater
-	Logger *zap.Logger
-	db     *sqlx.DB
-	chAdd  chan string
+	orderer orderer
+	userdo  userdo
+	Logger  *zap.Logger
+	db      *sqlx.DB
+	chAdd   chan string
 }
 
-func New(ord, usr searcher, ust creater, log *zap.Logger, db *sqlx.DB, chAdd chan string) handler {
+func New(orderer orderer, userdo userdo, log *zap.Logger, db *sqlx.DB, chAdd chan string) handler {
 	return handler{
-		ordS: ord,
-		usrS: usr,
-		//ordC:   ort,
-		usrC:   ust,
-		Logger: log,
-		db:     db,
-		chAdd:  chAdd,
+		orderer: orderer,
+		userdo:  userdo,
+		Logger:  log,
+		db:      db,
+		chAdd:   chAdd,
 	}
 }
 
@@ -65,24 +68,20 @@ func (h *handler) AddOrders() http.HandlerFunc {
 
 		ro, _ := io.ReadAll(req.Body)
 		order := string(ro)
-		if !orders.LunaCheck(order, h.Logger) {
+		if !h.orderer.LunaCheck(order) {
 			h.Logger.Info("AddOrders : не прошёл проверку lunacheck ", zap.String("order", order))
 			http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
 			return
 		}
-		userIDcookie := user.GetIDviaCookie(req)
+		userIDcookie := h.userdo.GetIDviaCookie(req)
 
-		//o, err := orders.FindOrder(h.db, h.Logger, order)
-		usrID, ordN := h.find(h.ordS, order)
-		fmt.Println("handlers AddOrders() ----", usrID, "-", ordN)
+		usrID, ordN := h.orderer.SearchIDs(order)
 
 		if usrID > 0 && usrID == userIDcookie {
-			fmt.Println("handlers AddOrders()----", usrID, ordN)
 			h.Logger.Info("AddOrders : заказ существует уже у этого пользователя", zap.String("order", order))
 			res.WriteHeader(http.StatusOK)
 			return
 		} else if usrID > 0 && usrID != userIDcookie {
-			fmt.Println("handlers AddOrders()----", usrID, ordN)
 			h.Logger.Info("AddOrders : заказ существует уже НО у другого пользователя", zap.String("order", order))
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return
@@ -90,7 +89,7 @@ func (h *handler) AddOrders() http.HandlerFunc {
 
 		if ordN == "" {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
-			err := orders.AddOrder(h.db, h.Logger, userIDcookie, order, 0, h.chAdd)
+			err := h.orderer.Create(userIDcookie, order, 0, h.chAdd)
 			if err != nil {
 				h.Logger.Info("Error AddOrders :", zap.String("about ERR", err.Error()))
 				http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
@@ -107,9 +106,8 @@ func (h *handler) AddOrders() http.HandlerFunc {
 func (h *handler) Orders() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
-		userID := user.GetIDviaCookie(req)
-		os, err := orders.FindOrders(h.db, h.Logger, userID, h.chAdd)
-		fmt.Println("----handlers Orders()", userID, os)
+		userID := h.userdo.GetIDviaCookie(req)
+		os, err := h.orderer.SearchMany(userID)
 		if err != nil {
 			h.Logger.Info("handler Orders", zap.String("orders.FindOrders", err.Error()))
 		}
@@ -139,7 +137,6 @@ func (h *handler) Orders() http.HandlerFunc {
 		}
 
 		h.Logger.Info("sending HTTP response",
-			//zap.String("size", strconv.Itoa(size)),
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
 	}
@@ -149,8 +146,8 @@ func (h *handler) Balance() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		res.Header().Set("Content-Type", "application/json")
-		userID := user.GetIDviaCookie(req)
-		ubs, err := user.Balance(h.db, h.Logger, userID)
+		userID := h.userdo.GetIDviaCookie(req)
+		ubs, err := h.userdo.Balance(userID)
 		if err != nil {
 			h.Logger.Info("handler Balance", zap.String("user.Balance", err.Error()))
 		}
@@ -174,7 +171,6 @@ func (h *handler) Balance() http.HandlerFunc {
 
 func (h *handler) Withdraw() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
-		fmt.Println("------Withdraw--start---")
 		ro, _ := io.ReadAll(req.Body)
 		var dat map[string]interface{}
 		err := json.Unmarshal(ro, &dat)
@@ -185,30 +181,17 @@ func (h *handler) Withdraw() http.HandlerFunc {
 		order := dat["order"].(string)
 		wdrw := dat["sum"]
 		sumWithdraw := wdrw.(float64)
-		fmt.Println("------Withdraw----", order, wdrw)
 
-		if !orders.LunaCheck(order, h.Logger) {
+		if !h.orderer.LunaCheck(order) {
 			http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
 			return
 		}
-		userID := user.GetIDviaCookie(req)
+		userID := h.userdo.GetIDviaCookie(req)
 
-		//ubs, err := user.Balance(h.db, h.Logger, userID)
-		//if err != nil {
-		//	h.Logger.Info("handler Withdraw", zap.String("user.Balance", err.Error()))
-		//}
-		//avBalance := ubs.Current - ubs.Withdrawn
-		//if avBalan	ce < sumWithdraw {
-		//	http.Error(res, "StatusPaymentRequired", http.StatusPaymentRequired)
-		//	return
-		//}
-		fmt.Println("------Withdraw----4")
-
-		o, err := orders.FindOrder(h.db, h.Logger, order)
+		o, err := h.orderer.FindOrder(order)
 		if err != nil {
 			h.Logger.Info("handler Withdraw", zap.String("orders.FindOrder", err.Error()))
 		}
-		fmt.Println("------Withdraw----5")
 
 		if o.UserID > 0 && o.UserID == userID {
 			h.Logger.Info("AddOrders : заказ существует уже у этого пользователя", zap.String("order", order))
@@ -220,11 +203,9 @@ func (h *handler) Withdraw() http.HandlerFunc {
 			return
 		}
 
-		fmt.Println("------Withdraw----6")
-
 		if err != nil {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
-			err = orders.AddOrder(h.db, h.Logger, userID, order, sumWithdraw, h.chAdd)
+			err = h.orderer.Create(userID, order, sumWithdraw, h.chAdd)
 			if err != nil {
 				h.Logger.Info("handler Withdraw", zap.String("orders.AddOrder", err.Error()))
 			}
@@ -239,7 +220,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 func (h *handler) Withdrawals() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
-		userID := user.GetIDviaCookie(req)
+		userID := h.userdo.GetIDviaCookie(req)
 		os, err := orders.FindWithdrawalsOrders(h.db, h.Logger, userID)
 		if err != nil {
 			h.Logger.Info("handler Withdrawals", zap.String("orders.FindOrders", err.Error()))
@@ -275,22 +256,4 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 			zap.String("status", strconv.Itoa(http.StatusOK)),
 		)
 	}
-}
-
-func (h *handler) find(se searcher, findStr string) (int, string) {
-	fmt.Println("---- find - SearchOne", se, findStr)
-
-	i, s := se.SearchOne(h.db, h.Logger, findStr)
-	fmt.Println("func (h *handler) find(se searcher, findStr string) (int, string)", i, s)
-	return i, s
-}
-
-func (h *handler) findMany(se searcher) {
-	i, s := se.SearchMany("_findMany")
-	fmt.Println(i, s)
-}
-
-func (h *handler) create(c creater, firstStr, secondStr string) error {
-	err := c.Create(h.db, h.Logger, firstStr, secondStr)
-	return err
 }

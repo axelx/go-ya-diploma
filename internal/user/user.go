@@ -1,8 +1,8 @@
 package user
 
 import (
-	"github.com/axelx/go-ya-diploma/internal/core"
 	"github.com/axelx/go-ya-diploma/internal/models"
+	"github.com/axelx/go-ya-diploma/internal/pg"
 	"github.com/axelx/go-ya-diploma/internal/utils"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -12,39 +12,36 @@ import (
 )
 
 type User struct {
-	ID       string `json:"id"`
+	ID       int    `json:"id"`
 	Login    string `json:"login,omitempty"`
 	Password string `json:"password,omitempty"`
+	DB       *sqlx.DB
+	LG       *zap.Logger
 }
 
-func (u User) SearchOne(db *sqlx.DB, lg *zap.Logger, login string) (int, string) {
-	usrID, log := core.FindUserByLogin(db, lg, login)
+func (u User) SearchOne(login string) (int, string) {
+	usrID, log := pg.FindUserByLogin(u.DB, u.LG, login)
 	return usrID, log
 }
 func (u User) SearchMany(s string) ([]int, []string) {
 	return []int{5}, []string{"user_" + s}
 }
 
-func (u User) Create(db *sqlx.DB, lg *zap.Logger, login, password string) error {
-	err := core.CreateNewUser(db, lg, login, password)
+func (u User) Create(login, password string) error {
+	err := pg.CreateNewUser(u.DB, u.LG, login, password)
 	return err
 }
 
-func CreateNewUser(db *sqlx.DB, lg *zap.Logger, login, password string) error {
-	err := core.CreateNewUser(db, lg, login, password)
-	return err
-}
+func (u User) AuthUser(login, password string) (http.Cookie, bool) {
+	usr := pg.AuthUser(u.DB, u.LG, login, password)
 
-func AuthUser(db *sqlx.DB, lg *zap.Logger, login, password string) (http.Cookie, bool) {
-	u := core.AuthUser(db, lg, login, password)
-
-	if u.Login == "" {
+	if usr.Login == "" {
 		return http.Cookie{}, false
 	}
 
 	cookie := http.Cookie{
 		Name:    "auth",
-		Value:   strconv.Itoa(u.ID),
+		Value:   strconv.Itoa(usr.ID),
 		Expires: time.Now().Add(time.Hour * 1),
 		Path:    "/",
 	}
@@ -52,10 +49,10 @@ func AuthUser(db *sqlx.DB, lg *zap.Logger, login, password string) (http.Cookie,
 	return cookie, true
 }
 
-func Balance(db *sqlx.DB, lg *zap.Logger, userID int) (models.Balance, error) {
-	os, err := core.FindOrders(db, lg, userID)
+func (u User) Balance(userID int) (models.Balance, error) {
+	os, err := pg.FindOrders(u.DB, u.LG, userID)
 	if err != nil {
-		lg.Info("user Balance", zap.String("err", err.Error()))
+		u.LG.Info("user Balance", zap.String("err", err.Error()))
 	}
 
 	b := models.Balance{}
@@ -73,7 +70,7 @@ func Balance(db *sqlx.DB, lg *zap.Logger, userID int) (models.Balance, error) {
 	return b, err
 }
 
-func GetIDviaCookie(req *http.Request) int {
+func (u User) GetIDviaCookie(req *http.Request) int {
 	cookies, _ := req.Cookie("auth")
 	userID := utils.StrToInt(cookies.Value)
 
