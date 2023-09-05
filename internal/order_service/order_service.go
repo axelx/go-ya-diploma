@@ -1,4 +1,4 @@
-package orders
+package order_service
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 	"math"
+	"math/rand"
 	"strconv"
 	"time"
 )
@@ -64,10 +65,13 @@ func (o Order) Create(userID int, orderID string, withdrawn float64, chAdd chan 
 func (o Order) LunaCheck(order string) bool {
 	sum := 0
 	ord := 0
+	if len(order) == 1 {
+		return false
+	}
 	for i := len(order); i > 0; i-- {
 		num, err := strconv.Atoi(string(order[i-1]))
 		if err != nil {
-			o.LG.Info("orders LunaCheck ошибка", zap.String("about", ""))
+			o.LG.Info("order_service LunaCheck ошибка", zap.String("about", ""))
 			return false
 		}
 		digit := num
@@ -93,24 +97,6 @@ func (o Order) FindOrder(orderID string) (models.Order, error) {
 	return or, err
 }
 
-//func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int, chAdd chan string) ([]models.Order, error) {
-//	os, err := pg.FindOrders(db, lg, userID)
-//	if err != nil {
-//		lg.Info("order FindOrders", zap.String("err", err.Error()))
-//	}
-//
-//	for i, o := range os {
-//		if o.Accrual != 0 {
-//			os[i].Accrual = o.Accrual / 100
-//		}
-//		if o.Withdrawn > 0 {
-//			os[i].Withdrawn = o.Withdrawn / 100
-//		}
-//	}
-//
-//	return os, nil
-//}
-
 func FindWithdrawalsOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.OrderWithdrawal, error) {
 	os, err := pg.FindOrders(db, lg, userID)
 	if err != nil {
@@ -128,20 +114,10 @@ func FindWithdrawalsOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Or
 			ow.UploadedAt = o.UploadedAt
 			res = append(res, ow)
 		}
-		fmt.Println("----orders FindOrders():", o)
 	}
 
 	return res, nil
 }
-
-//func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, orderID string, withdrawn float64, chAdd chan string) error {
-//	err := pg.AddOrder(db, lg, userID, orderID, withdrawn)
-//	if err == nil {
-//		lg.Info("order AddOrder and add to channel", zap.String("orderID", orderID))
-//		chAdd <- orderID
-//	}
-//	return err
-//}
 
 func UpdateStatus(db *sqlx.DB, lg *zap.Logger, orderID, status string, accrual float64) error {
 	accrual = accrual * 100
@@ -152,4 +128,45 @@ func UpdateStatus(db *sqlx.DB, lg *zap.Logger, orderID, status string, accrual f
 		return err
 	}
 	return err
+}
+
+func GenerateLunaNumber(length int) string {
+	//! с генерацией четных чисел проблема. (нужно начинать подсчёт с первого числа и добавлять в конец контрольное число.
+	rand.Seed(time.Now().UnixNano()) // Инициализация генератора случайных чисел
+
+	var num []int
+	if length%2 == 0 {
+		num = make([]int, length-1)
+	} else {
+		num = make([]int, length-1)
+	}
+
+	for i := 0; i < length-1; i++ {
+		if i == 0 {
+			num[i] = rand.Intn(9) + 1
+		} else {
+			num[i] = rand.Intn(10)
+		}
+	}
+
+	sum := 0
+	ord := 0
+	for i := len(num); i > 0; i-- {
+		digit := num[i-1]
+		if (ord)%2 == 1 {
+			digit *= 2
+			if digit > 9 {
+				digit -= 9
+			}
+		}
+		sum += digit
+		ord += 1
+	}
+	lastDigit := (10 - sum%10) % 10
+
+	numStr := ""
+	for _, digit := range num {
+		numStr += fmt.Sprintf("%d", digit)
+	}
+	return fmt.Sprintf("%d", lastDigit) + numStr
 }

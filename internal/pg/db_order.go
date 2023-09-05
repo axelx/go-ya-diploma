@@ -21,7 +21,6 @@ func FindOrder(db *sqlx.DB, lg *zap.Logger, orderID string) (models.Order, error
 }
 
 func FindOrders(db *sqlx.DB, lg *zap.Logger, userID int) ([]models.Order, error) {
-
 	rows, err := db.QueryContext(context.Background(),
 		` SELECT number,accrual,withdrawn,status,uploaded_at FROM orders WHERE user_id = $1`, userID)
 	if err != nil {
@@ -74,8 +73,6 @@ func AddOrder(db *sqlx.DB, lg *zap.Logger, userID int, order string, withdrawn f
 func UpdateStatusOrder(db *sqlx.DB, lg *zap.Logger, orderID, status string, accrual int) error {
 	_, err := db.ExecContext(context.Background(),
 		`UPDATE orders SET status = $1,  accrual = $2 WHERE number = $3`, status, accrual, orderID)
-	//_, err := pg.ExecContext(context.Background(),
-	//	`UPDATE orders SET status = $1 WHERE number = $2`, status, orderID)
 	if err != nil {
 		lg.Info("Error AddOrder:", zap.String("about ERR", err.Error()))
 		return err

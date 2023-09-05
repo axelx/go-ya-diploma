@@ -1,6 +1,7 @@
 package pg
 
 import (
+	"context"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -28,4 +29,10 @@ func InitDB(url string, lg *zap.Logger) (*sqlx.DB, error) {
 	}
 
 	return db, nil
+}
+
+func DropTablesForTest(db *sqlx.DB, lg *zap.Logger) error {
+	_, err := db.ExecContext(context.Background(), `DROP TABLE orders; DROP TABLE users;`)
+	lg.Info("Drop table:", zap.String("drop", " success"))
+	return err
 }

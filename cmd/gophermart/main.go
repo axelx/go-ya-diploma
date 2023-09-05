@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/axelx/go-ya-diploma/internal/pg"
-	"github.com/axelx/go-ya-diploma/internal/user"
+	"github.com/axelx/go-ya-diploma/internal/user_service"
 	"github.com/axelx/go-ya-diploma/internal/utils"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
@@ -17,7 +17,7 @@ import (
 	"github.com/axelx/go-ya-diploma/internal/config"
 	"github.com/axelx/go-ya-diploma/internal/handlers"
 	"github.com/axelx/go-ya-diploma/internal/logger"
-	"github.com/axelx/go-ya-diploma/internal/orders"
+	"github.com/axelx/go-ya-diploma/internal/order_service"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -34,8 +34,8 @@ func main() {
 		lg.Error("Error not connect to pg", zap.String("about ERR", err.Error()))
 	}
 
-	ord := orders.Order{DB: db, LG: lg}
-	usr := user.User{DB: db, LG: lg}
+	ord := order_service.Order{DB: db, LG: lg}
+	usr := user_service.User{DB: db, LG: lg}
 
 	chNewOrder := make(chan string, 100)
 	chProcOrder := make(chan string, 500)
@@ -83,7 +83,7 @@ func checkAccural(urlAccrualServer, order string, chProcOrder chan string, count
 
 		lg.Info("main checkAccural", zap.String("response accrual", string(body)), zap.String("response body.status", strconv.Itoa(resp2.StatusCode)))
 		lg.Info("main checkAccural", zap.String("dat[\"status\"]", fmt.Sprintf("%v", dat["status"])))
-		orders.UpdateStatus(db, lg, order, fmt.Sprintf("%v", dat["status"]), utils.GetFloat(dat["accrual"]))
+		order_service.UpdateStatus(db, lg, order, fmt.Sprintf("%v", dat["status"]), utils.GetFloat(dat["accrual"]))
 		if dat["status"] == "PROCESSING" {
 			lg.Info("main checkAccural", zap.String("добавляем в канал процесс", order))
 			chProcOrder <- order

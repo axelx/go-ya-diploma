@@ -5,7 +5,7 @@ import (
 	"github.com/axelx/go-ya-diploma/internal/logger"
 	"github.com/axelx/go-ya-diploma/internal/middleware"
 	"github.com/axelx/go-ya-diploma/internal/models"
-	"github.com/axelx/go-ya-diploma/internal/orders"
+	"github.com/axelx/go-ya-diploma/internal/order_service"
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -26,7 +26,7 @@ type userdo interface {
 	SearchOne(string) (int, string)
 	Create(string, string) error
 	AuthUser(string, string) (http.Cookie, bool)
-	GetIDviaCookie(req *http.Request) int
+	GetIDviaCookie(string) int
 	Balance(int) (models.Balance, error)
 }
 
@@ -73,15 +73,17 @@ func (h *handler) AddOrders() http.HandlerFunc {
 			http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
 			return
 		}
-		userIDcookie := h.userdo.GetIDviaCookie(req)
+
+		cookies, _ := req.Cookie("auth")
+		userID := h.userdo.GetIDviaCookie(cookies.Value)
 
 		usrID, ordN := h.orderer.SearchIDs(order)
 
-		if usrID > 0 && usrID == userIDcookie {
+		if usrID > 0 && usrID == userID {
 			h.Logger.Info("AddOrders : заказ существует уже у этого пользователя", zap.String("order", order))
 			res.WriteHeader(http.StatusOK)
 			return
-		} else if usrID > 0 && usrID != userIDcookie {
+		} else if usrID > 0 && usrID != userID {
 			h.Logger.Info("AddOrders : заказ существует уже НО у другого пользователя", zap.String("order", order))
 			http.Error(res, "StatusConflict", http.StatusConflict)
 			return
@@ -89,7 +91,7 @@ func (h *handler) AddOrders() http.HandlerFunc {
 
 		if ordN == "" {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
-			err := h.orderer.Create(userIDcookie, order, 0, h.chAdd)
+			err := h.orderer.Create(userID, order, 0, h.chAdd)
 			if err != nil {
 				h.Logger.Info("Error AddOrders :", zap.String("about ERR", err.Error()))
 				http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
@@ -106,10 +108,11 @@ func (h *handler) AddOrders() http.HandlerFunc {
 func (h *handler) Orders() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
-		userID := h.userdo.GetIDviaCookie(req)
+		cookies, _ := req.Cookie("auth")
+		userID := h.userdo.GetIDviaCookie(cookies.Value)
 		os, err := h.orderer.SearchMany(userID)
 		if err != nil {
-			h.Logger.Info("handler Orders", zap.String("orders.FindOrders", err.Error()))
+			h.Logger.Info("handler Orders", zap.String("order_service.FindOrders", err.Error()))
 		}
 
 		res.Header().Set("Content-Type", "application/json")
@@ -118,7 +121,7 @@ func (h *handler) Orders() http.HandlerFunc {
 		if len(os) == 0 {
 			_, err := res.Write([]byte("[]"))
 			if err != nil {
-				h.Logger.Info("Orders: not found any orders", zap.String("StatusInternalServerError", err.Error()))
+				h.Logger.Info("Orders: not found any order_service", zap.String("StatusInternalServerError", err.Error()))
 				http.Error(res, "StatusInternalServerError", http.StatusInternalServerError)
 				return
 			}
@@ -146,10 +149,11 @@ func (h *handler) Balance() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
 		res.Header().Set("Content-Type", "application/json")
-		userID := h.userdo.GetIDviaCookie(req)
+		cookies, _ := req.Cookie("auth")
+		userID := h.userdo.GetIDviaCookie(cookies.Value)
 		ubs, err := h.userdo.Balance(userID)
 		if err != nil {
-			h.Logger.Info("handler Balance", zap.String("user.Balance", err.Error()))
+			h.Logger.Info("handler Balance", zap.String("user_service.Balance", err.Error()))
 		}
 		balanceJSON, err := json.Marshal(ubs)
 		if err != nil {
@@ -186,11 +190,12 @@ func (h *handler) Withdraw() http.HandlerFunc {
 			http.Error(res, "StatusUnprocessableEntity", http.StatusUnprocessableEntity)
 			return
 		}
-		userID := h.userdo.GetIDviaCookie(req)
+		cookies, _ := req.Cookie("auth")
+		userID := h.userdo.GetIDviaCookie(cookies.Value)
 
 		o, err := h.orderer.FindOrder(order)
 		if err != nil {
-			h.Logger.Info("handler Withdraw", zap.String("orders.FindOrder", err.Error()))
+			h.Logger.Info("handler Withdraw", zap.String("order_service.FindOrder", err.Error()))
 		}
 
 		if o.UserID > 0 && o.UserID == userID {
@@ -207,7 +212,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
 			err = h.orderer.Create(userID, order, sumWithdraw, h.chAdd)
 			if err != nil {
-				h.Logger.Info("handler Withdraw", zap.String("orders.AddOrder", err.Error()))
+				h.Logger.Info("handler Withdraw", zap.String("order_service.AddOrder", err.Error()))
 			}
 		}
 
@@ -220,10 +225,11 @@ func (h *handler) Withdraw() http.HandlerFunc {
 func (h *handler) Withdrawals() http.HandlerFunc {
 	return func(res http.ResponseWriter, req *http.Request) {
 
-		userID := h.userdo.GetIDviaCookie(req)
-		os, err := orders.FindWithdrawalsOrders(h.db, h.Logger, userID)
+		cookies, _ := req.Cookie("auth")
+		userID := h.userdo.GetIDviaCookie(cookies.Value)
+		os, err := order_service.FindWithdrawalsOrders(h.db, h.Logger, userID)
 		if err != nil {
-			h.Logger.Info("handler Withdrawals", zap.String("orders.FindOrders", err.Error()))
+			h.Logger.Info("handler Withdrawals", zap.String("order_service.FindOrders", err.Error()))
 		}
 
 		res.Header().Set("Content-Type", "application/json")

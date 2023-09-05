@@ -18,6 +18,7 @@ type Order struct {
 	UploadedAt *time.Time `json:"uploaded_at,omitempty"`
 	UserID     int        `json:"user_id,omitempty"`
 }
+
 type OrderWithdrawal struct {
 	ID         int        `json:"id,omitempty"`
 	Number     string     `json:"order,omitempty"`
