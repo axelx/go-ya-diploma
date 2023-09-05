@@ -5,7 +5,7 @@ import (
 	"github.com/axelx/go-ya-diploma/internal/logger"
 	"github.com/axelx/go-ya-diploma/internal/middleware"
 	"github.com/axelx/go-ya-diploma/internal/models"
-	"github.com/axelx/go-ya-diploma/internal/order_service"
+	"github.com/axelx/go-ya-diploma/internal/orderservice"
 	"github.com/go-chi/chi/v5"
 	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
@@ -112,7 +112,7 @@ func (h *handler) Orders() http.HandlerFunc {
 		userID := h.userdo.GetIDviaCookie(cookies.Value)
 		os, err := h.orderer.SearchMany(userID)
 		if err != nil {
-			h.Logger.Info("handler Orders", zap.String("order_service.FindOrders", err.Error()))
+			h.Logger.Info("handler Orders", zap.String("orderservice.FindOrders", err.Error()))
 		}
 
 		res.Header().Set("Content-Type", "application/json")
@@ -121,7 +121,7 @@ func (h *handler) Orders() http.HandlerFunc {
 		if len(os) == 0 {
 			_, err := res.Write([]byte("[]"))
 			if err != nil {
-				h.Logger.Info("Orders: not found any order_service", zap.String("StatusInternalServerError", err.Error()))
+				h.Logger.Info("Orders: not found any orderservice", zap.String("StatusInternalServerError", err.Error()))
 				http.Error(res, "StatusInternalServerError", http.StatusInternalServerError)
 				return
 			}
@@ -153,7 +153,7 @@ func (h *handler) Balance() http.HandlerFunc {
 		userID := h.userdo.GetIDviaCookie(cookies.Value)
 		ubs, err := h.userdo.Balance(userID)
 		if err != nil {
-			h.Logger.Info("handler Balance", zap.String("user_service.Balance", err.Error()))
+			h.Logger.Info("handler Balance", zap.String("userservice.Balance", err.Error()))
 		}
 		balanceJSON, err := json.Marshal(ubs)
 		if err != nil {
@@ -195,7 +195,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 
 		o, err := h.orderer.FindOrder(order)
 		if err != nil {
-			h.Logger.Info("handler Withdraw", zap.String("order_service.FindOrder", err.Error()))
+			h.Logger.Info("handler Withdraw", zap.String("orderservice.FindOrder", err.Error()))
 		}
 
 		if o.UserID > 0 && o.UserID == userID {
@@ -212,7 +212,7 @@ func (h *handler) Withdraw() http.HandlerFunc {
 			h.Logger.Info("AddOrders : добавляем новый заказ", zap.String("order", order))
 			err = h.orderer.Create(userID, order, sumWithdraw, h.chAdd)
 			if err != nil {
-				h.Logger.Info("handler Withdraw", zap.String("order_service.AddOrder", err.Error()))
+				h.Logger.Info("handler Withdraw", zap.String("orderservice.AddOrder", err.Error()))
 			}
 		}
 
@@ -227,9 +227,9 @@ func (h *handler) Withdrawals() http.HandlerFunc {
 
 		cookies, _ := req.Cookie("auth")
 		userID := h.userdo.GetIDviaCookie(cookies.Value)
-		os, err := order_service.FindWithdrawalsOrders(h.db, h.Logger, userID)
+		os, err := orderservice.FindWithdrawalsOrders(h.db, h.Logger, userID)
 		if err != nil {
-			h.Logger.Info("handler Withdrawals", zap.String("order_service.FindOrders", err.Error()))
+			h.Logger.Info("handler Withdrawals", zap.String("orderservice.FindOrders", err.Error()))
 		}
 
 		res.Header().Set("Content-Type", "application/json")

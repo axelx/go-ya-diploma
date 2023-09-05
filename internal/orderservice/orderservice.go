@@ -1,4 +1,4 @@
-package order_service
+package orderservice
 
 import (
 	"fmt"
@@ -71,7 +71,7 @@ func (o Order) LunaCheck(order string) bool {
 	for i := len(order); i > 0; i-- {
 		num, err := strconv.Atoi(string(order[i-1]))
 		if err != nil {
-			o.LG.Info("order_service LunaCheck ошибка", zap.String("about", ""))
+			o.LG.Info("orderservice LunaCheck ошибка", zap.String("about", ""))
 			return false
 		}
 		digit := num
