@@ -1,4 +1,4 @@
-package user
+package userservice
 
 import (
 	"github.com/axelx/go-ya-diploma/internal/models"
@@ -70,9 +70,8 @@ func (u User) Balance(userID int) (models.Balance, error) {
 	return b, err
 }
 
-func (u User) GetIDviaCookie(req *http.Request) int {
-	cookies, _ := req.Cookie("auth")
-	userID := utils.StrToInt(cookies.Value)
+func (u User) GetIDviaCookie(cookiesVal string) int {
+	userID := utils.StrToInt(cookiesVal)
 
 	return userID
 }

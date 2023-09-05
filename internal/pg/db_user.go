@@ -8,11 +8,11 @@ import (
 )
 
 func FindUserByLogin(db *sqlx.DB, lg *zap.Logger, login string) (int, string) {
-	row := db.QueryRowContext(context.Background(), `SELECT id, login FROM users WHERE login = '$1'`, login)
+	row := db.QueryRowContext(context.Background(), `SELECT id, login FROM users WHERE login = $1`, login)
 	var v models.User
 	err := row.Scan(&v.ID, &v.Login)
 	if err != nil {
-		lg.Info("Error FindUserByLogin : user not found", zap.String("about ERR", err.Error()))
+		lg.Info("Error FindUserByLogin : user not found", zap.String("about ERR", err.Error()), zap.String("login", login))
 		return 0, ""
 	}
 	lg.Info("pg FindUserByLogin :", zap.String("user_id", v.Login))
