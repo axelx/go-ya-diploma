@@ -83,7 +83,7 @@ func checkAccural(urlAccrualServer, order string, chProcOrder chan string, count
 
 		lg.Info("main checkAccural", zap.String("response accrual", string(body)), zap.String("response body.status", strconv.Itoa(resp2.StatusCode)))
 		lg.Info("main checkAccural", zap.String("dat[\"status\"]", fmt.Sprintf("%v", dat["status"])))
-		order_service.UpdateStatus(db, lg, order, fmt.Sprintf("%v", dat["status"]), utils.GetFloat(dat["accrual"]))
+		orderservice.UpdateStatus(db, lg, order, fmt.Sprintf("%v", dat["status"]), utils.GetFloat(dat["accrual"]))
 		if dat["status"] == "PROCESSING" {
 			lg.Info("main checkAccural", zap.String("добавляем в канал процесс", order))
 			chProcOrder <- order
