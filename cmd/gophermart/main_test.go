@@ -41,10 +41,10 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body []
 
 	return resp, string(respBody)
 }
-func testRequestAuth(t *testing.T, ts *httptest.Server, method, path string, body []byte, userId string) (*http.Response, string) {
+func testRequestAuth(t *testing.T, ts *httptest.Server, method, path string, body []byte, userID string) (*http.Response, string) {
 	req, err := http.NewRequest(method, ts.URL+path, bytes.NewReader(body))
 
-	req.AddCookie(&http.Cookie{Name: "auth", Value: userId, Expires: time.Now().Add(time.Hour * 1)})
+	req.AddCookie(&http.Cookie{Name: "auth", Value: userID, Expires: time.Now().Add(time.Hour * 1)})
 
 	require.NoError(t, err)
 
@@ -74,7 +74,7 @@ func TestAddOrder(t *testing.T) {
 	hd := handlers.New(ord, usr, lg, db, chNewOrder)
 	ts := httptest.NewServer(hd.Router())
 
-	userId := findOrCreateUser(db, lg, "test")
+	userID := findOrCreateUser(db, lg, "test")
 
 	defer ts.Close()
 
@@ -99,7 +99,7 @@ func TestAddOrder(t *testing.T) {
 	}
 
 	for _, v := range testTable {
-		resp, data := testRequestAuth(t, ts, "POST", v.url, []byte(v.body), strconv.Itoa(userId))
+		resp, data := testRequestAuth(t, ts, "POST", v.url, []byte(v.body), strconv.Itoa(userID))
 
 		var result models.User
 		json.Unmarshal([]byte(data), &result)
@@ -203,12 +203,12 @@ func randomString(length int) string {
 
 func findOrCreateUser(db *sqlx.DB, lg *zap.Logger, login string) int {
 
-	userId, _ := pg.FindUserByLogin(db, lg, login)
+	userID, _ := pg.FindUserByLogin(db, lg, login)
 
-	if userId == 0 {
+	if userID == 0 {
 		pg.CreateNewUser(db, lg, login, "111")
-		userId, _ = pg.FindUserByLogin(db, lg, login)
+		userID, _ = pg.FindUserByLogin(db, lg, login)
 
 	}
-	return userId
+	return userID
 }
