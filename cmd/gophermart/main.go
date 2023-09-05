@@ -3,8 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/axelx/go-ya-diploma/internal/orderservice"
 	"github.com/axelx/go-ya-diploma/internal/pg"
-	"github.com/axelx/go-ya-diploma/internal/user_service"
+	"github.com/axelx/go-ya-diploma/internal/userservice"
 	"github.com/axelx/go-ya-diploma/internal/utils"
 	_ "github.com/jackc/pgx/stdlib"
 	"github.com/jmoiron/sqlx"
@@ -17,7 +18,6 @@ import (
 	"github.com/axelx/go-ya-diploma/internal/config"
 	"github.com/axelx/go-ya-diploma/internal/handlers"
 	"github.com/axelx/go-ya-diploma/internal/logger"
-	"github.com/axelx/go-ya-diploma/internal/order_service"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -34,8 +34,8 @@ func main() {
 		lg.Error("Error not connect to pg", zap.String("about ERR", err.Error()))
 	}
 
-	ord := order_service.Order{DB: db, LG: lg}
-	usr := user_service.User{DB: db, LG: lg}
+	ord := orderservice.Order{DB: db, LG: lg}
+	usr := userservice.User{DB: db, LG: lg}
 
 	chNewOrder := make(chan string, 100)
 	chProcOrder := make(chan string, 500)
